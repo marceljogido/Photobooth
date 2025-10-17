@@ -23,6 +23,7 @@ export const init = () => {
   })
 }
 
+// ...existing code...
 export const snapPhoto = async b64 => {
   const id = crypto.randomUUID()
   const {activeMode, customPrompt} = get()
@@ -32,20 +33,34 @@ export const snapPhoto = async b64 => {
     state.photos.unshift({id, mode: activeMode, isBusy: true})
   })
 
-  const result = await gen({
-    model,
-    prompt: activeMode === 'custom' ? customPrompt : modes[activeMode].prompt,
-    inputFile: b64
-  })
+  try {
+    const result = await gen({
+      model,
+      prompt: activeMode === 'custom' ? customPrompt : modes[activeMode].prompt,
+      inputFile: b64
+    })
+    
+    imageData.outputs[id] = result
 
-  imageData.outputs[id] = result
-
-  set(state => {
-    state.photos = state.photos.map(photo =>
-      photo.id === id ? {...photo, isBusy: false} : photo
-    )
-  })
+    set(state => {
+      state.photos = state.photos.map(photo =>
+        photo.id === id ? {...photo, isBusy: false} : photo
+      )
+    })
+    
+    return id // Return the photo ID
+  } catch (error) {
+    console.error('Error processing photo:', error)
+    set(state => {
+      state.photos = state.photos.map(photo =>
+        photo.id === id ? {...photo, isBusy: false, error: error.message} : photo
+      )
+    })
+    alert('Gagal memproses foto: ' + error.message)
+    return id // Still return ID even on error
+  }
 }
+// ...existing code...
 
 export const deletePhoto = id => {
   set(state => {
@@ -111,39 +126,70 @@ const addFrameToGif = (gif, imageData, size, delay) => {
 }
 
 export const makeGif = async () => {
-  const {photos} = get()
+  const {photos, gifUrl: previousGifUrl} = get()
 
   set(state => {
     state.gifInProgress = true
   })
 
   try {
-    const gif = new GIFEncoder()
     const readyPhotos = photos.filter(photo => !photo.isBusy)
-
-    for (const photo of readyPhotos) {
-      const inputImageData = await processImageToCanvas(
-        imageData.inputs[photo.id],
-        gifSize
-      )
-      addFrameToGif(gif, inputImageData, gifSize, 333)
-
-      const outputImageData = await processImageToCanvas(
-        imageData.outputs[photo.id],
-        gifSize
-      )
-      addFrameToGif(gif, outputImageData, gifSize, 833)
+    if (readyPhotos.length === 0) {
+      console.warn('makeGif called without any ready photos')
+      return null
     }
 
+    const [latestPhoto] = readyPhotos
+    const latestId = latestPhoto.id
+
+    const gif = new GIFEncoder()
+
+    const inputBase64 = imageData.inputs[latestId]
+    const outputBase64 = imageData.outputs[latestId]
+
+    if (!inputBase64 || !outputBase64) {
+      console.warn('Missing input or output image data for GIF generation')
+      return null
+    }
+
+    const inputImageData = await processImageToCanvas(inputBase64, gifSize)
+    addFrameToGif(gif, inputImageData, gifSize, 333)
+
+    const outputImageData = await processImageToCanvas(outputBase64, gifSize)
+    addFrameToGif(gif, outputImageData, gifSize, 833)
+
     gif.finish()
+
+    if (previousGifUrl && typeof previousGifUrl === 'string' && previousGifUrl.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(previousGifUrl)
+      } catch (error) {
+        console.warn('Failed to revoke previous GIF URL:', error)
+      }
+    }
 
     const gifUrl = URL.createObjectURL(
       new Blob([gif.buffer], {type: 'image/gif'})
     )
 
+    // Hanya pertahankan data foto terbaru
+    Object.keys(imageData.inputs).forEach(key => {
+      if (key !== latestId) {
+        delete imageData.inputs[key]
+      }
+    })
+    Object.keys(imageData.outputs).forEach(key => {
+      if (key !== latestId) {
+        delete imageData.outputs[key]
+      }
+    })
+
     set(state => {
       state.gifUrl = gifUrl
+      state.photos = state.photos.filter(photo => photo.id === latestId)
     })
+
+    return gifUrl
   } catch (error) {
     console.error('Error creating GIF:', error)
     return null
@@ -152,6 +198,32 @@ export const makeGif = async () => {
       state.gifInProgress = false
     })
   }
+}
+
+export const resetSession = () => {
+  const {gifUrl} = get()
+
+  // Bersihkan semua data foto yang tersimpan
+  Object.keys(imageData.inputs).forEach(key => {
+    delete imageData.inputs[key]
+  })
+  Object.keys(imageData.outputs).forEach(key => {
+    delete imageData.outputs[key]
+  })
+
+  if (gifUrl && typeof gifUrl === 'string' && gifUrl.startsWith('blob:')) {
+    try {
+      URL.revokeObjectURL(gifUrl)
+    } catch (error) {
+      console.warn('Failed to revoke GIF object URL:', error)
+    }
+  }
+
+  set(state => {
+    state.photos = []
+    state.gifUrl = null
+    state.gifInProgress = false
+  })
 }
 
 export const hideGif = () =>
@@ -163,5 +235,3 @@ export const setCustomPrompt = prompt =>
   set(state => {
     state.customPrompt = prompt
   })
-
-init()

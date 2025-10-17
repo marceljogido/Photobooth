@@ -8,7 +8,12 @@ import {limitFunction} from 'p-limit'
 const timeoutMs = 123_333
 const maxRetries = 5
 const baseDelay = 1_233
-const ai = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY})
+
+console.log('GEMINI_API_KEY available:', !!process.env.GEMINI_API_KEY)
+console.log('GEMINI_API_KEY value:', process.env.GEMINI_API_KEY ? 'Set' : 'Not set')
+
+const apiKey = process.env.GEMINI_API_KEY || 'AIzaSyCyxzHjEk5Z_Vyr5UnglXBqEgxFHRzIvF4'
+const ai = new GoogleGenAI({apiKey: apiKey})
 
 export default limitFunction(
   async ({model, prompt, inputFile, signal}) => {
