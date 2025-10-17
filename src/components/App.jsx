@@ -26,6 +26,10 @@ const QR_TAB_OPTIONS = [
   {key: 'photo', label: 'QR Foto', icon: 'photo_camera'},
   {key: 'gif', label: 'QR GIF', icon: 'movie'}
 ]
+const RESULT_TAB_OPTIONS = [
+  {key: 'ai', label: 'Hasil AI', icon: 'image'},
+  {key: 'gif', label: 'Hasil GIF', icon: 'movie'}
+]
 
 const loadImage = src =>
   new Promise((resolve, reject) => {
@@ -146,6 +150,8 @@ export default function App() {
   const [currentPhotoId, setCurrentPhotoId] = useState(null)
   const [showMobileModeSelector, setShowMobileModeSelector] = useState(false)
   const [showDesktopModeSelector, setShowDesktopModeSelector] = useState(false)
+  const [activeResultTab, setActiveResultTab] = useState('ai')
+  const [isMobileResults, setIsMobileResults] = useState(false)
   const [cloudUrls, setCloudUrls] = useState({}) // Store cloud URLs for photos
   const [watermarkedOutputs, setWatermarkedOutputs] = useState({})
   const watermarkedOutputsRef = useRef({})
@@ -213,6 +219,29 @@ export default function App() {
       return 'photo'
     })
   }, [showDownloadModal, qrCodes.photo, qrCodes.gif])
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mediaQuery = window.matchMedia('(max-width: 768px)')
+    const handleChange = event => {
+      setIsMobileResults(event.matches)
+    }
+    setIsMobileResults(mediaQuery.matches)
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', handleChange)
+    } else {
+      mediaQuery.addListener(handleChange)
+    }
+    return () => {
+      if (typeof mediaQuery.removeEventListener === 'function') {
+        mediaQuery.removeEventListener('change', handleChange)
+      } else {
+        mediaQuery.removeListener(handleChange)
+      }
+    }
+  }, [])
+  useEffect(() => {
+    setActiveResultTab('ai')
+  }, [currentPhotoId])
   
   const videoRef = useRef(null)
   // Auto-create GIF when there are ready photos and no GIF yet
@@ -587,9 +616,35 @@ export default function App() {
     currentPhotoId,
     photosCount: photos.length
   })
+  const currentPhoto = currentPhotoId
+    ? photos.find(photo => photo.id === currentPhotoId)
+    : null
   const aiPhotoSrc = currentPhotoId
     ? (watermarkedOutputs[currentPhotoId] || imageData.outputs[currentPhotoId] || null)
     : null
+  const renderResultSection = section => {
+    const isAi = section === 'ai'
+    const heading = isAi ? '?? Hasil AI' : '??? GIF'
+    const isBusy = isAi ? currentPhoto?.isBusy : gifInProgress || !gifUrl
+    const src = isAi
+      ? aiPhotoSrc || (currentPhotoId ? imageData.outputs[currentPhotoId] : null)
+      : gifUrl
+    const alt = isAi ? 'Hasil AI' : 'Hasil GIF'
+    const placeholderText = isAi ? 'Sedang memproses...' : 'GIF sedang diproses...'
+    return (
+      <div className="photoSide" key={section}>
+        <h3>{heading}</h3>
+        {isBusy || !src ? (
+          <div className="loadingPlaceholder">
+            <div className="spinner"></div>
+            <p>{placeholderText}</p>
+          </div>
+        ) : (
+          <img src={src} alt={alt} />
+        )}
+      </div>
+    )
+  }
   // Test render dulu
   console.log('?? About to return JSX...')
   return (
@@ -1065,29 +1120,48 @@ export default function App() {
       {currentPage === 'results' && currentPhotoId && (
         <div className="resultsPage">
           <div className="photoResult">
-            <div className="photoComparison">
-              <div className="photoSide">
-                <h3>?? Hasil AI</h3>
-                {photos.find(p => p.id === currentPhotoId)?.isBusy ? (
-                  <div className="loadingPlaceholder">
-                    <div className="spinner"></div>
-                    <p>Sedang memproses...</p>
+            <div className={c('photoComparison', {isMobileResults})}>
+              {isMobileResults ? (
+                <>
+                  <div className="resultTabs" role="tablist" aria-label="Hasil foto dan GIF">
+                    {RESULT_TAB_OPTIONS.map(({key, label, icon}) => {
+                      const isActive = activeResultTab === key
+                      const isAi = key === 'ai'
+                      const isBusy = isAi ? currentPhoto?.isBusy : gifInProgress || !gifUrl
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          id={`result-tab-${key}`}
+                          className={c('resultTabButton', {active: isActive})}
+                          onClick={() => setActiveResultTab(key)}
+                          role="tab"
+                          aria-selected={isActive}
+                          aria-controls="result-panel"
+                          tabIndex={isActive ? 0 : -1}
+                        >
+                          <span className="icon">{icon}</span>
+                          <span className="resultTabLabel">{label}</span>
+                          {isBusy && <span className="resultTabStatus">Loading</span>}
+                        </button>
+                      )
+                    })}
                   </div>
-                ) : (
-                  <img src={aiPhotoSrc || imageData.outputs[currentPhotoId]} alt="Hasil AI" />
-                )}
-              </div>
-              <div className="photoSide">
-                <h3>??? GIF</h3>
-                {gifInProgress || !gifUrl ? (
-                  <div className="loadingPlaceholder">
-                    <div className="spinner"></div>
-                    <p>GIF sedang diproses...</p>
+                  <div
+                    className="resultPanel"
+                    role="tabpanel"
+                    id="result-panel"
+                    aria-labelledby={`result-tab-${activeResultTab}`}
+                  >
+                    {renderResultSection(activeResultTab)}
                   </div>
-                ) : (
-                  <img src={gifUrl} alt="Hasil GIF" />
-                )}
-              </div>
+                </>
+              ) : (
+                <>
+                  {renderResultSection('ai')}
+                  {renderResultSection('gif')}
+                </>
+              )}
             </div>
             {/* 3 Tombol Utama: Download GIF | Download Foto | Selesai */}
             <div className="resultsActions">
