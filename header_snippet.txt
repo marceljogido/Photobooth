@@ -1,0 +1,18 @@
+﻿{/* Header dengan Logo dan Nama Aplikasi */}
+      <header className="appHeader">
+        <div className="logoContainer">
+          <div className="cameraIcon">📷</div>
+          <h1 className="appTitle">DigiOH Photobooth</h1>
+        </div>
+      </header>
+      <main>
+        {/* Navigation Header */}
+        {currentPage === 'results' && (
+          <div className="pageHeader">
+            <button 
+              className="backButton"
+              onClick={retakePhoto}
+            >
+              <span className="icon">arrow_back</span>
+              Kembali ke Kamera
+    

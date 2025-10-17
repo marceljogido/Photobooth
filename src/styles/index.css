@@ -1,4 +1,4 @@
-﻿* {
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -113,6 +113,7 @@ button {
   user-select: none;
   display: flex;
   align-items: center;
+  text-align: center;
   gap: 5px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
   font-weight: 600;
@@ -133,6 +134,7 @@ button .icon {
   border-radius: 8px;
   gap: 4px;
   align-items: center;
+  text-align: center;
   justify-content: center;
   color: #fffc;
 }
@@ -166,6 +168,7 @@ button .icon {
 .logoContainer {
   display: flex;
   align-items: center;
+  text-align: center;
   justify-content: center;
   gap: 15px;
   max-width: 1400px;
@@ -208,6 +211,7 @@ main:has(.camera) {
   max-width: 100vw;
   margin: 0;
   align-items: center;
+  text-align: center;
   justify-content: center;
   min-height: calc(100vh - 100px);
 }
@@ -218,6 +222,7 @@ main:has(.camera) {
     display: flex;
     flex-direction: column;
     align-items: center;
+  text-align: center;
     gap: 8px !important;
     padding: 10px !important;
     min-height: calc(100vh - 70px);
@@ -249,6 +254,96 @@ main:has(.resultsPage) {
 .resultsPage .photoResult {
   width: 100%;
   max-width: 100%;
+}
+@media (max-aspect-ratio: 3/4) {
+  .resultsPage {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    height: 100vh;
+    width: 100%;
+    padding: clamp(16px, 4vh, 32px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  text-align: center;
+    gap: clamp(16px, 4vh, 32px);
+    overflow: hidden;
+  }
+
+  .resultsPage .pageHeader {
+    display: none !important;
+  }
+
+  .photoResult {
+    margin-top: 0 !important;
+    flex: 1;
+    width: 100%;
+    max-width: 720px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(16px, 4vh, 28px);
+  }
+
+  .resultsPage .photoComparison,
+  .photoResult .photoComparison {
+    flex: 1;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: clamp(12px, 3vh, 20px);
+  }
+
+  .resultsPage .photoSide,
+  .photoResult .photoSide {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  text-align: center;
+    justify-content: flex-start;
+    gap: clamp(8px, 2vh, 12px);
+    min-height: 0;
+  }
+
+  .resultsPage .photoSide img,
+  .photoResult .photoSide img {
+    flex: 1;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    object-fit: contain !important;
+    background: rgba(0, 0, 0, 0.12);
+  }
+
+  .resultsPage .loadingPlaceholder {
+    flex: 1;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+  }
+
+  .resultsActions,
+  .resultActions {
+    margin-top: auto;
+    display: grid;
+    width: 100%;
+    max-width: 720px;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .resultsActions .btn,
+  .resultsActions .btnPrimary,
+  .resultsActions .btnSecondary,
+  .resultActions .btn {
+    width: 100%;
+    min-height: 56px;
+    font-size: 1rem;
+  }
 }
 
 /* Override main padding for results page */
@@ -1707,6 +1802,7 @@ main .canvasSection:first-child {
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
   justify-content: center;
   aspect-ratio: 16/9;
   padding: 0;
@@ -1750,6 +1846,7 @@ main .canvasSection:first-child {
 .cameraModeToggle {
   display: flex;
   align-items: center;
+  text-align: center;
   justify-content: center;
   gap: 8px;
   padding: 12px 16px;
@@ -1790,6 +1887,7 @@ main .canvasSection:first-child {
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
   justify-content: center;
   gap: 4px;
   padding: 10px;
@@ -1836,6 +1934,7 @@ main .canvasSection:first-child {
   height: 100%;
   display: flex;
   align-items: center;
+  text-align: center;
   justify-content: center;
 }
 
@@ -1917,6 +2016,7 @@ main .canvasSection:first-child {
   z-index: 1000;
   display: flex;
   align-items: center;
+  text-align: center;
   justify-content: center;
   padding: 20px;
 }
@@ -1967,8 +2067,9 @@ main .canvasSection:first-child {
 
 .customPrompt .modalHeader {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  text-align: center;
   margin-bottom: 20px;
 }
 
@@ -1990,6 +2091,7 @@ main .canvasSection:first-child {
   height: 40px;
   display: flex;
   align-items: center;
+  text-align: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -2296,7 +2398,7 @@ main .canvasSection:first-child {
   }
 }
 
-/* Extra small screens (â‰¤480px) */
+/* Extra small screens (≤480px) */
 @media (max-width: 480px) {
   .mobileModeSelector {
     position: fixed !important;
@@ -2523,6 +2625,7 @@ main .canvasSection:first-child {
   display: flex;
   justify-content: center;
   align-items: center;
+  text-align: center;
   z-index: 15;
   width: auto;
 }
@@ -2552,6 +2655,7 @@ main .canvasSection:first-child {
 .modeSelectorToggle {
   display: flex;
   align-items: center;
+  text-align: center;
   justify-content: center;
   gap: 12px;
   padding: 15px;
@@ -2601,6 +2705,7 @@ main .canvasSection:first-child {
   display: flex;
   flex-direction: row;
   align-items: center;
+  text-align: center;
   justify-content: flex-start;
   gap: 12px;
   padding: 12px;
@@ -2648,6 +2753,7 @@ main .canvasSection:first-child {
     left: 50%;
     transform: translateX(-50%);
     align-items: center;
+  text-align: center;
     gap: 8px;
     width: calc(100% - 24px);
   }
@@ -2656,6 +2762,7 @@ main .canvasSection:first-child {
     flex-direction: row;
     justify-content: center;
     align-items: center;
+  text-align: center;
     gap: 8px;
   }
 
@@ -2951,6 +3058,7 @@ main .canvasSection:first-child {
   backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
+  text-align: center;
   justify-content: center;
   z-index: 1000;
   padding: 40px;
@@ -2971,8 +3079,9 @@ main .canvasSection:first-child {
 
 .desktopModeHeader {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  text-align: center;
   margin-bottom: 20px;
   padding-bottom: 15px;
   border-bottom: 1px solid rgba(99, 102, 241, 0.3);
@@ -3011,6 +3120,7 @@ main .canvasSection:first-child {
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
   justify-content: center;
   gap: 6px;
   padding: 12px;
@@ -3063,6 +3173,7 @@ main .canvasSection:first-child {
   display: flex;
   flex-direction: row;
   align-items: center;
+  text-align: center;
   justify-content: flex-start;
   filter: grayscale(0) brightness(1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -3293,6 +3404,7 @@ main .canvasSection:first-child {
   padding: 30px 20px;
   flex-direction: column;
   align-items: center;
+  text-align: center;
   justify-content: center;
   gap: 25px;
   background: rgba(0, 0, 0, 0.7);
@@ -3338,6 +3450,7 @@ main .canvasSection:first-child {
   height: 70px;
   display: flex;
   align-items: center;
+  text-align: center;
   justify-content: center;
   box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
 }
@@ -3506,6 +3619,7 @@ main .canvasSection:first-child {
     overflow: hidden;
     display: flex;
     align-items: center;
+  text-align: center;
     justify-content: center;
     /* Portrait orientation for mobile */
     aspect-ratio: 3/4 !important;
@@ -3618,7 +3732,7 @@ main .canvasSection:first-child {
   }
 }
 
-/* Extra small screens (â‰¤320px) */
+/* Extra small screens (≤320px) */
 @media (max-width: 320px) {
   .camera {
     height: 280px;
@@ -4160,7 +4274,7 @@ main .canvasSection:first-child {
   }
 }
 
-/* Large mobile screens (â‰¥481px) */
+/* Large mobile screens (≥481px) */
 @media (min-width: 481px) and (max-width: 768px) {
   .camera {
     height: 400px;
@@ -4334,6 +4448,7 @@ main .canvasSection:first-child {
   padding: 20px;
   display: flex;
   align-items: center;
+  text-align: center;
   justify-content: center;
   text-align: center;
   flex-direction: column;
@@ -4617,6 +4732,7 @@ main .canvasSection:first-child {
   z-index: 1000;
   display: flex;
   align-items: center;
+  text-align: center;
   justify-content: center;
   padding: 20px;
 }
@@ -4663,6 +4779,7 @@ main .canvasSection:first-child {
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
 }
 
 .photoPreview {
@@ -4692,6 +4809,7 @@ main .canvasSection:first-child {
   border-radius: 15px;
   display: flex;
   align-items: center;
+  text-align: center;
   justify-content: center;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -4711,6 +4829,7 @@ main .canvasSection:first-child {
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
   gap: 15px;
 }
 
@@ -4733,6 +4852,7 @@ main .canvasSection:first-child {
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
   gap: 10px;
 }
 
@@ -4766,6 +4886,7 @@ main .canvasSection:first-child {
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
+  text-align: center;
   justify-content: center;
   gap: 8px;
 }
@@ -4801,6 +4922,7 @@ main .canvasSection:first-child {
   cursor: pointer;
   display: flex;
   align-items: center;
+  text-align: center;
   gap: 8px;
 }
 
@@ -4880,6 +5002,7 @@ main .canvasSection:first-child {
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.7));
   display: flex;
   align-items: center;
+  text-align: center;
   justify-content: center;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -4902,6 +5025,7 @@ main .canvasSection:first-child {
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
   gap: 8px;
 }
 
@@ -4928,6 +5052,7 @@ main .canvasSection:first-child {
   border-radius: 50%;
   display: flex;
   align-items: center;
+  text-align: center;
   justify-content: center;
   font-size: 12px;
   opacity: 0;
@@ -4963,6 +5088,7 @@ main .canvasSection:first-child {
   cursor: pointer;
   display: flex;
   align-items: center;
+  text-align: center;
   gap: 8px;
 }
 
@@ -5004,6 +5130,7 @@ main .canvasSection:first-child {
   .previewActions {
     flex-direction: column;
     align-items: center;
+  text-align: center;
   }
   
   .btnAccent,
@@ -5016,6 +5143,7 @@ main .canvasSection:first-child {
   .historyActions {
     flex-direction: column;
     align-items: center;
+  text-align: center;
   }
   
   .historyActions .btnAccent,
@@ -5035,7 +5163,7 @@ main .canvasSection:first-child {
   }
   
   .previewHeader {
-    padding: 15px 20px;
+    padding: 18px 20px 14px;
   }
   
   .previewBody {
@@ -5054,6 +5182,7 @@ main .canvasSection:first-child {
   .previewActions {
     flex-direction: column;
     align-items: center;
+  text-align: center;
   }
   
   .previewActions .btn {
@@ -5066,7 +5195,8 @@ main .canvasSection:first-child {
 .pageHeader {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  text-align: center;
+  justify-content: center;
   padding: 20px;
   background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 25%, #3b82f6 50%, #60a5fa 75%, #93c5fd 100%);
   border-radius: 15px;
@@ -5078,6 +5208,7 @@ main .canvasSection:first-child {
 .backButton {
   display: flex;
   align-items: center;
+  text-align: center;
   gap: 8px;
   padding: 12px 20px;
   background: rgba(255, 255, 255, 0.1);
@@ -5196,6 +5327,7 @@ main .canvasSection:first-child {
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
   justify-content: center;
   margin: 0 auto;
 }
@@ -5239,6 +5371,7 @@ main .canvasSection:first-child {
   cursor: pointer;
   display: flex;
   align-items: center;
+  text-align: center;
   gap: 10px;
 }
 
@@ -5302,6 +5435,7 @@ main .canvasSection:first-child {
   .resultsActions {
     flex-direction: column;
     align-items: center;
+  text-align: center;
   }
   
   .btnSecondary,
@@ -5341,6 +5475,7 @@ main .canvasSection:first-child {
   z-index: 1001;
   display: flex;
   align-items: center;
+  text-align: center;
   justify-content: center;
   padding: 20px;
 }
@@ -5367,8 +5502,9 @@ p, span, label, div {
 .qrHeader {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 20px 25px;
+  text-align: center;
+  justify-content: center;
+  padding: 22px 25px 18px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -5388,52 +5524,125 @@ p, span, label, div {
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
   justify-content: center;
-  gap: 25px;
+  gap: 24px;
 }
 
-.qrBodyDual {
-  display: flex;
-  flex-direction: row;
-  gap: 30px;
+.qrTabs {
+  display: inline-flex;
+  align-items: center;
+  text-align: center;
   justify-content: center;
-  align-items: stretch;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.qrTabButton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.25);
+  text-shadow: none;
+}
+
+.qrTabButton .icon {
+  font-size: 18px;
+}
+
+.qrTabLabel {
+  white-space: nowrap;
+}
+
+.qrTabStatus {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(15, 23, 42, 0.45);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 2px 6px;
+  border-radius: 999px;
+  margin-left: 6px;
+}
+
+.qrTabButton.active {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #4f46e5 100%);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(99, 102, 241, 0.4);
+  transform: translateY(-1px);
+}
+
+.qrTabButton.active .qrTabStatus {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.qrTabButton:not(.active):hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.qrCard {
   width: 100%;
-}
-
-.qrItem {
+  max-width: 280px;
+  padding: 28px 30px 32px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.35);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  text-align: center;
+  gap: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
-.qrItem h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
+.qrCardTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.95);
+  margin: 0;
+  text-shadow: 0 4px 12px rgba(15, 23, 42, 0.35);
 }
 
 .qrCodeImage {
-  width: 200px;
-  height: 200px;
+  width: clamp(180px, 60vw, 220px);
+  height: clamp(180px, 60vw, 220px);
   border-radius: 15px;
   border: 3px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
   background: white;
   padding: 10px;
+  object-fit: contain;
 }
 
 .qrPlaceholder {
-  width: 200px;
-  height: 200px;
+  width: clamp(180px, 60vw, 220px);
+  height: clamp(180px, 60vw, 220px);
   background: rgba(255, 255, 255, 0.05);
   border: 2px dashed rgba(255, 255, 255, 0.3);
   border-radius: 15px;
   display: flex;
   align-items: center;
+  text-align: center;
   justify-content: center;
+  flex-direction: column;
+  padding: 20px;
+  gap: 12px;
 }
 
 .qrPlaceholder .spinner {
@@ -5445,12 +5654,18 @@ p, span, label, div {
   animation: spin 1s linear infinite;
 }
 
+.qrPlaceholderText {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
+  text-align: center;
+  margin: 0;
+}
+
 .qrActions {
   display: flex;
   gap: 15px;
   justify-content: center;
   flex-wrap: wrap;
-  margin-top: 25px;
 }
 
 /* Responsive QR Modal */
@@ -5460,27 +5675,42 @@ p, span, label, div {
     max-height: 95vh;
   }
   
-  .qrBodyDual {
-    flex-direction: column;
-    gap: 20px;
-  }
-  
   .qrHeader {
-    padding: 15px 20px;
+    padding: 18px 20px 14px;
   }
   
   .qrBody {
-    padding: 25px 20px;
+    padding: 20px 10px;
+    gap: 10px;
   }
   
   .qrCodeImage {
-    width: 180px;
-    height: 180px;
+    width: clamp(170px, 70vw, 200px);
+    height: clamp(170px, 70vw, 200px);
+  }
+
+  .qrPlaceholder {
+    width: clamp(170px, 70vw, 200px);
+    height: clamp(170px, 70vw, 200px);
+  }
+
+  .qrTabs {
+    width: 100%;
+    justify-content: center;
+    gap: 3px;
+  }
+
+  .qrTabButton {
+    flex: 1;
+    justify-content: center;
+    padding: 15px 12px;
+    font-size: 1rem;
   }
   
   .qrActions {
     flex-direction: column;
     align-items: center;
+  text-align: center;
   }
   
   .btnPrimary,
@@ -5686,4 +5916,12 @@ p, span, label, div {
     font-size: 9px !important;
   }
 }
+
+
+
+
+
+
+
+
 

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @license
  * SPDX-License-Identifier: Apache-2.0
 */
@@ -22,6 +22,10 @@ const canvas = document.createElement('canvas')
 const ctx = canvas.getContext('2d')
 const modeKeys = Object.keys(modes)
 const WATERMARK_OVERLAY_SRC = '/logowatermark.png'
+const QR_TAB_OPTIONS = [
+  {key: 'photo', label: 'QR Foto', icon: 'photo_camera'},
+  {key: 'gif', label: 'QR GIF', icon: 'movie'}
+]
 
 const loadImage = src =>
   new Promise((resolve, reject) => {
@@ -89,7 +93,7 @@ const buildWatermarkedPreview = async base64Data => {
   }
 }
 export default function App() {
-  console.log('🚀 App component rendering...')
+  console.log('?? App component rendering...')
   
   useEffect(() => {
     init()
@@ -98,29 +102,29 @@ export default function App() {
   let photos, customPrompt, activeMode, gifInProgress, gifUrl
   
   try {
-    console.log('🔄 Attempting to load store...')
+    console.log('?? Attempting to load store...')
     photos = useStore.use.photos()
     customPrompt = useStore.use.customPrompt()
     activeMode = useStore.use.activeMode()
     gifInProgress = useStore.use.gifInProgress()
     gifUrl = useStore.use.gifUrl()
-    console.log('✅ Store state loaded:', { 
+    console.log('? Store state loaded:', { 
       photosCount: photos.length, 
       activeMode, 
       customPromptLength: customPrompt.length 
     })
   } catch (error) {
-    console.error('❌ Error loading store:', error)
+    console.error('? Error loading store:', error)
     // Fallback values
     photos = []
     customPrompt = ''
     activeMode = 'renaissance'
     gifInProgress = false
     gifUrl = null
-    console.log('🔄 Using fallback values')
+    console.log('?? Using fallback values')
   }
   
-  console.log('🎨 About to render App component...')
+  console.log('?? About to render App component...')
   
   const [videoActive, setVideoActive] = useState(false)
   const [didInitVideo, setDidInitVideo] = useState(false)
@@ -137,6 +141,7 @@ export default function App() {
   const [qrCodes, setQrCodes] = useState({photo: null, gif: null})
   const [isUploading, setIsUploading] = useState(false)
   const [showDownloadModal, setShowDownloadModal] = useState(false)
+  const [activeQrTab, setActiveQrTab] = useState('photo')
   const [currentPage, setCurrentPage] = useState('camera') // 'camera' or 'results'
   const [currentPhotoId, setCurrentPhotoId] = useState(null)
   const [showMobileModeSelector, setShowMobileModeSelector] = useState(false)
@@ -198,6 +203,16 @@ export default function App() {
       cancelled = true
     }
   }, [photos])
+  useEffect(() => {
+    if (!showDownloadModal) return
+    setActiveQrTab(current => {
+      if (current === 'photo' && qrCodes.photo) return current
+      if (current === 'gif' && qrCodes.gif) return current
+      if (qrCodes.photo) return 'photo'
+      if (qrCodes.gif) return 'gif'
+      return 'photo'
+    })
+  }, [showDownloadModal, qrCodes.photo, qrCodes.gif])
   
   const videoRef = useRef(null)
   // Auto-create GIF when there are ready photos and no GIF yet
@@ -205,7 +220,7 @@ export default function App() {
     try {
       const readyCount = photos.filter(p => !p.isBusy).length
       if (readyCount > 0 && !gifInProgress && !gifUrl) {
-        console.log('🎬 Auto-creating GIF because photos are ready...')
+        console.log('?? Auto-creating GIF because photos are ready...')
         makeGif()
       }
     } catch (e) {
@@ -334,14 +349,14 @@ export default function App() {
     }
   }
   const uploadToFTP = async (imageUrl, filename) => {
-    console.log('🔄 Starting FTP upload for:', filename)
-    console.log('📷 Image URL type:', imageUrl.startsWith('data:') ? 'Base64' : 'URL')
+    console.log('?? Starting FTP upload for:', filename)
+    console.log('?? Image URL type:', imageUrl.startsWith('data:') ? 'Base64' : 'URL')
     
     try {
       // Convert base64 to blob
       const response = await fetch(imageUrl)
       const blob = await response.blob()
-      console.log('📁 Blob created, size:', blob.size)
+      console.log('?? Blob created, size:', blob.size)
       
       // Upload ke FTP server
       const formData = new FormData()
@@ -353,12 +368,12 @@ export default function App() {
         body: formData
       })
       
-      console.log('📡 FTP server response status:', uploadResponse.status)
+      console.log('?? FTP server response status:', uploadResponse.status)
       
       if (uploadResponse.ok) {
         const result = await uploadResponse.json()
         if (result.success && result.directLink) {
-          console.log('✅ FTP upload successful:', result.directLink)
+          console.log('? FTP upload successful:', result.directLink)
           return {
             url: result.directLink,
             qrCode: result.qrCode
@@ -373,8 +388,8 @@ export default function App() {
     }
   }
   const generateQRCodeFor = async (imageUrl, filename = null, cacheKey = null) => {
-    console.log('🔄 generateQRCodeFor called:', {filename, cacheKey})
-    console.log('📷 Image URL for QR:', imageUrl)
+    console.log('?? generateQRCodeFor called:', {filename, cacheKey})
+    console.log('?? Image URL for QR:', imageUrl)
     
     const defaultFilename = filename || `digioh-photobooth-${Date.now()}.jpg`
     
@@ -423,7 +438,7 @@ export default function App() {
           }))
         }
         
-        console.log('⚠️ QR Code generated with direct image URL fallback')
+        console.log('?? QR Code generated with direct image URL fallback')
         
         return {
           qrCode: qrCodeDataURL,
@@ -467,7 +482,7 @@ export default function App() {
       videoRef.current.srcObject = null
     }
     
-    console.log('🔄 Reset aplikasi untuk user berikutnya')
+    console.log('?? Reset aplikasi untuk user berikutnya')
   }
   const proceedToResults = () => {
     setCurrentPage('results')
@@ -479,18 +494,18 @@ export default function App() {
     }
     
     if (!currentPhotoId) {
-      alert('❌ Foto tidak tersedia. Silakan ambil foto terlebih dahulu.')
+      alert('? Foto tidak tersedia. Silakan ambil foto terlebih dahulu.')
       return
     }
     
     const currentPhoto = photos.find(p => p.id === currentPhotoId)
     if (!currentPhoto || currentPhoto.isBusy) {
-      alert('⏳ Foto atau GIF masih diproses. Silakan tunggu sebentar.')
+      alert('? Foto atau GIF masih diproses. Silakan tunggu sebentar.')
       return
     }
     
     if (gifInProgress) {
-      alert('⏳ GIF sedang diproses. Silakan coba lagi setelah selesai.')
+      alert('? GIF sedang diproses. Silakan coba lagi setelah selesai.')
       return
     }
     
@@ -501,7 +516,7 @@ export default function App() {
     
     const photoData = imageData.outputs[currentPhotoId]
     if (!photoData) {
-      alert('❌ Foto AI belum tersedia. Silakan tunggu sebentar.')
+      alert('? Foto AI belum tersedia. Silakan tunggu sebentar.')
       return
     }
     
@@ -542,8 +557,8 @@ export default function App() {
       })
       setShowDownloadModal(true)
     } catch (error) {
-      console.error('❌ Failed preparing QR codes:', error)
-      alert('❌ Gagal menyiapkan QR download. Silakan coba lagi.')
+      console.error('? Failed preparing QR codes:', error)
+      alert('? Gagal menyiapkan QR download. Silakan coba lagi.')
     } finally {
       setIsUploading(false)
     }
@@ -564,8 +579,8 @@ export default function App() {
   }, [])
   // Tidak ada auto-start video - user harus klik tombol "Mari Berfoto!" dulu
   
-  console.log('🎨 Rendering JSX now...')
-  console.log('📊 Current state:', {
+  console.log('?? Rendering JSX now...')
+  console.log('?? Current state:', {
     currentPage,
     videoActive,
     showPreview,
@@ -576,13 +591,13 @@ export default function App() {
     ? (watermarkedOutputs[currentPhotoId] || imageData.outputs[currentPhotoId] || null)
     : null
   // Test render dulu
-  console.log('🎨 About to return JSX...')
+  console.log('?? About to return JSX...')
   return (
     <>
       {/* Header dengan Logo dan Nama Aplikasi */}
       <header className="appHeader">
         <div className="logoContainer">
-          <div className="cameraIcon">📷</div>
+          <div className="cameraIcon">??</div>
           <h1 className="appTitle">DigiOH Photobooth</h1>
         </div>
       </header>
@@ -597,7 +612,7 @@ export default function App() {
               <span className="icon">arrow_back</span>
               Kembali ke Kamera
             </button>
-            <h2 className="pageTitle">✨ Hasil Foto Anda</h2>
+            <h2 className="pageTitle">? Hasil Foto Anda</h2>
           </div>
         )}
         {showCustomPrompt && (
@@ -611,12 +626,8 @@ export default function App() {
               <h2 className="modalTitle">Custom AI Prompt</h2>
               <button
                 className="closeBtn"
-                onClick={() => {
-                  setShowCustomPrompt(false)
-                  if (customPrompt.trim().length === 0) {
-                    setMode(modeKeys[0])
-                  }
-                }}
+                onClick={() => setShowCustomPrompt(false)}
+                type="button"
               >
                 <span className="icon">close</span>
               </button>
@@ -635,7 +646,7 @@ export default function App() {
               />
               
               <div style={{marginTop: '15px', fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)'}}>
-                <p>💡 <strong>Tips:</strong></p>
+                <p>?? <strong>Tips:</strong></p>
                 <ul style={{margin: '8px 0', paddingLeft: '20px'}}>
                   <li>Be specific about colors, lighting, and mood</li>
                   <li>Mention art styles like "oil painting", "watercolor", "digital art"</li>
@@ -678,7 +689,7 @@ export default function App() {
         }}>
           <div className="previewContent">
             <div className="previewHeader">
-              <h2 className="previewTitle">📸 Foto Anda!</h2>
+              <h2 className="previewTitle">?? Foto Anda!</h2>
               <p className="previewSubtitle">Bagaimana hasilnya? Pilih aksi selanjutnya</p>
             </div>
             
@@ -782,7 +793,7 @@ export default function App() {
                 fontWeight: 'bold',
                 textShadow: '0 2px 10px rgba(0, 0, 0, 0.5)'
               }}>
-                Bersiap! 📸
+                Bersiap! ??
               </h2>
               <p style={{
                 fontSize: '20px',
@@ -817,7 +828,7 @@ export default function App() {
                 e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)'
               }}
             >
-              ❌ Batal
+              ? Batal
             </button>
           </div>
         </div>
@@ -836,7 +847,7 @@ export default function App() {
             {/* Mode Selector Overlay di dalam Camera */}
             <div className="cameraModeSelector">
               <div className="cameraModeHeader">
-                <h3 className="cameraModeTitle">🎨 Pilih Mode Foto</h3>
+                <h3 className="cameraModeTitle">?? Pilih Mode Foto</h3>
                 <button 
                   className="cameraModeToggle"
                   onClick={(e) => {
@@ -866,7 +877,7 @@ export default function App() {
                       setShowCustomPrompt(true)
                     }}
                   >
-                    <span>✏️</span> 
+                    <span>??</span> 
                     <p>Custom</p>
                   </button>
                   {Object.entries(modes).map(([key, {name, emoji, prompt}]) => (
@@ -908,13 +919,13 @@ export default function App() {
         {!videoActive && (
           <button className="startButton" onClick={startVideo} disabled={isLoading}>
             <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px'}}>
-              <span style={{fontSize: '2rem'}}>📸</span>
+              <span style={{fontSize: '2rem'}}>??</span>
               <h1>Mari Berfoto!</h1>
             </div>
             <p>
-              {isLoading ? '🔄 Siapkan gaya Anda...' : 
-               didInitVideo ? '⏳ Tunggu sebentar...' : 
-               'Klik untuk mulai berfoto! 📸'}
+              {isLoading ? '?? Siapkan gaya Anda...' : 
+               didInitVideo ? '? Tunggu sebentar...' : 
+               'Klik untuk mulai berfoto! ??'}
             </p>
             
             {cameraError && (
@@ -927,7 +938,7 @@ export default function App() {
                 color: '#fca5a5',
                 fontSize: '14px'
               }}>
-                <p style={{margin: 0, fontWeight: '600'}}>❌ Error Kamera</p>
+                <p style={{margin: 0, fontWeight: '600'}}>? Error Kamera</p>
                 <p style={{margin: '4px 0 0 0', fontSize: '12px'}}>{cameraError}</p>
                 <button 
                   onClick={(e) => {
@@ -1005,7 +1016,7 @@ export default function App() {
               onClick={() => setShowMobileModeSelector(!showMobileModeSelector)}
             >
               <span className="icon">palette</span>
-              <span>🎨 {modes[activeMode]?.name || 'Custom'}</span>
+              <span>?? {modes[activeMode]?.name || 'Custom'}</span>
               <span className="icon">{showMobileModeSelector ? 'expand_less' : 'expand_more'}</span>
             </button>
             
@@ -1028,7 +1039,7 @@ export default function App() {
                       setShowMobileModeSelector(false)
                     }}
                   >
-                    <span>✏️</span> 
+                    <span>??</span> 
                     <span>Custom</span>
                   </button>
                   {Object.entries(modes).map(([key, {name, emoji, prompt}]) => (
@@ -1056,7 +1067,7 @@ export default function App() {
           <div className="photoResult">
             <div className="photoComparison">
               <div className="photoSide">
-                <h3>🎨 Hasil AI</h3>
+                <h3>?? Hasil AI</h3>
                 {photos.find(p => p.id === currentPhotoId)?.isBusy ? (
                   <div className="loadingPlaceholder">
                     <div className="spinner"></div>
@@ -1067,7 +1078,7 @@ export default function App() {
                 )}
               </div>
               <div className="photoSide">
-                <h3>🎞️ GIF</h3>
+                <h3>??? GIF</h3>
                 {gifInProgress || !gifUrl ? (
                   <div className="loadingPlaceholder">
                     <div className="spinner"></div>
@@ -1122,32 +1133,55 @@ export default function App() {
         }}>
           <div className="qrContent">
             <div className="qrHeader">
-              <h2 className="qrTitle">📱 Scan QR untuk Download</h2>
-              <button
-                className="closeBtn"
-                onClick={() => setShowDownloadModal(false)}
-              >
-                <span className="icon">close</span>
-              </button>
+              <h2 className="qrTitle" >Scan QR untuk Download</h2>
             </div>
-            <div className="qrBody qrBodyDual">
-              <div className="qrItem">
-                <h3>QR Foto</h3>
-                {qrCodes.photo ? (
-                  <img src={qrCodes.photo} alt="QR Foto" className="qrCodeImage" />
-                ) : (
-                  <div className="qrPlaceholder">
-                    <div className="spinner"></div>
-                  </div>
-                )}
+            <div className="qrBody">
+              <div className="qrTabs" role="tablist" aria-label="QR download options">
+                {QR_TAB_OPTIONS.map(({key, label, icon}) => {
+                  const isActive = activeQrTab === key
+                  const isReady = Boolean(qrCodes[key])
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      id={`qr-tab-${key}`}
+                      className={c('qrTabButton', {active: isActive, ready: isReady})}
+                      onClick={() => setActiveQrTab(key)}
+                      role="tab"
+                      aria-selected={isActive}
+                      aria-controls="qr-download-panel"
+                      tabIndex={isActive ? 0 : -1}
+                    >
+                      <span className="icon">{icon}</span>
+                      <span className="qrTabLabel">{label}</span>
+                      {!isReady && <span className="qrTabStatus">Loading</span>}
+                    </button>
+                  )
+                })}
               </div>
-              <div className="qrItem">
-                <h3>QR GIF</h3>
-                {qrCodes.gif ? (
-                  <img src={qrCodes.gif} alt="QR GIF" className="qrCodeImage" />
+              <div
+                className="qrCard"
+                role="tabpanel"
+                id="qr-download-panel"
+                aria-labelledby={`qr-tab-${activeQrTab}`}
+              >
+                <h3 className="qrCardTitle">
+                  {activeQrTab === 'photo' ? 'QR Foto' : 'QR GIF'}
+                </h3>
+                {qrCodes[activeQrTab] ? (
+                  <img
+                    src={qrCodes[activeQrTab]}
+                    alt={activeQrTab === 'photo' ? 'QR Foto' : 'QR GIF'}
+                    className="qrCodeImage"
+                  />
                 ) : (
                   <div className="qrPlaceholder">
                     <div className="spinner"></div>
+                    <p className="qrPlaceholderText">
+                      {activeQrTab === 'photo'
+                        ? 'Menyiapkan QR untuk foto...'
+                        : 'Menyiapkan QR untuk GIF...'}
+                    </p>
                   </div>
                 )}
               </div>
@@ -1157,8 +1191,6 @@ export default function App() {
                 className="btn btnSecondary"
                 onClick={() => setShowDownloadModal(false)}
               >
-                <span className="icon">close</span>
-                Tutup
               </button>
             </div>
           </div>
@@ -1173,7 +1205,7 @@ export default function App() {
         }}>
           <div className="desktopModeContent">
             <div className="desktopModeHeader">
-              <h2 className="desktopModeTitle">🎨 Pilih Mode Foto</h2>
+              <h2 className="desktopModeTitle">?? Pilih Mode Foto</h2>
               <button 
                 className="desktopModeClose"
                 onClick={() => setShowDesktopModeSelector(false)}
@@ -1196,7 +1228,7 @@ export default function App() {
                   setShowDesktopModeSelector(false)
                 }}
               >
-                <span>✏️</span> 
+                <span>??</span> 
                 <p>Custom</p>
               </button>
               {Object.entries(modes).map(([key, {name, emoji, prompt}]) => (
@@ -1230,7 +1262,7 @@ export default function App() {
         >
           {hoveredMode.key === 'custom' && !hoveredMode.prompt.length ? (
             <div style={{textAlign: 'center'}}>
-              <p style={{marginBottom: '8px'}}>✏️ Click to set a custom prompt</p>
+              <p style={{marginBottom: '8px'}}>?? Click to set a custom prompt</p>
               <p style={{fontSize: '11px', opacity: 0.7}}>Create your own AI art style</p>
             </div>
           ) : (
@@ -1245,4 +1277,5 @@ export default function App() {
     </>
   )
 }
+
 
