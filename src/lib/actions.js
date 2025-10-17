@@ -11,6 +11,31 @@ import modes from './modes'
 const get = useStore.getState
 const set = useStore.setState
 const gifSize = 512
+const WATERMARK_SOURCE = '/logowatermark.png'
+
+const loadImage = src =>
+  new Promise((resolve, reject) => {
+    if (typeof Image === 'undefined') {
+      reject(new Error('Image constructor unavailable'))
+      return
+    }
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = reject
+    img.src = src
+  })
+
+let watermarkImagePromise = null
+
+const getWatermarkImage = async () => {
+  if (!watermarkImagePromise) {
+    watermarkImagePromise = loadImage(WATERMARK_SOURCE).catch(error => {
+      watermarkImagePromise = null
+      throw error
+    })
+  }
+  return watermarkImagePromise
+}
 const model = 'gemini-2.0-flash-preview-image-generation'
 
 export const init = () => {
@@ -76,7 +101,7 @@ export const setMode = mode =>
     state.activeMode = mode
   })
 
-const processImageToCanvas = async (base64Data, size) => {
+const processImageToCanvas = async (base64Data, size, withWatermark = false) => {
   const img = new Image()
   await new Promise((resolve, reject) => {
     img.onload = resolve
@@ -111,6 +136,23 @@ const processImageToCanvas = async (base64Data, size) => {
 
   ctx.clearRect(0, 0, size, size)
   ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight)
+
+  if (withWatermark) {
+    try {
+      const watermark = await getWatermarkImage()
+      if (watermark && watermark.width && watermark.height) {
+        const desiredWidth = size * 0.2
+        const aspect = watermark.width / watermark.height
+        const desiredHeight = desiredWidth / aspect
+        const margin = Math.max(10, Math.round(size * 0.04))
+        const x = size - desiredWidth - margin
+        const y = size - desiredHeight - margin
+        ctx.drawImage(watermark, x, y, desiredWidth, desiredHeight)
+      }
+    } catch (error) {
+      console.warn('Failed to apply watermark to GIF frame:', error)
+    }
+  }
 
   return ctx.getImageData(0, 0, size, size)
 }
@@ -152,10 +194,10 @@ export const makeGif = async () => {
       return null
     }
 
-    const inputImageData = await processImageToCanvas(inputBase64, gifSize)
+    const inputImageData = await processImageToCanvas(inputBase64, gifSize, true)
     addFrameToGif(gif, inputImageData, gifSize, 333)
 
-    const outputImageData = await processImageToCanvas(outputBase64, gifSize)
+    const outputImageData = await processImageToCanvas(outputBase64, gifSize, true)
     addFrameToGif(gif, outputImageData, gifSize, 833)
 
     gif.finish()

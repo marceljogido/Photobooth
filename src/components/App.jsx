@@ -22,6 +22,72 @@ const canvas = document.createElement('canvas')
 const ctx = canvas.getContext('2d')
 const modeKeys = Object.keys(modes)
 const WATERMARK_OVERLAY_SRC = '/logowatermark.png'
+
+const loadImage = src =>
+  new Promise((resolve, reject) => {
+    if (typeof Image === 'undefined') {
+      reject(new Error('Image API unavailable'))
+      return
+    }
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = reject
+    img.src = src
+  })
+
+let watermarkPreviewPromise = null
+
+const getWatermarkImage = async () => {
+  if (!watermarkPreviewPromise) {
+    watermarkPreviewPromise = loadImage(WATERMARK_OVERLAY_SRC).catch(error => {
+      watermarkPreviewPromise = null
+      throw error
+    })
+  }
+  return watermarkPreviewPromise
+}
+
+const getMimeTypeFromDataUrl = dataUrl => {
+  const match = typeof dataUrl === 'string'
+    ? dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);/)
+    : null
+  return match ? match[1] : 'image/png'
+}
+
+const buildWatermarkedPreview = async base64Data => {
+  const [sourceImage, watermark] = await Promise.all([
+    loadImage(base64Data),
+    getWatermarkImage()
+  ])
+
+  const width = sourceImage.width || 1
+  const height = sourceImage.height || 1
+  const previewCanvas = document.createElement('canvas')
+  previewCanvas.width = width
+  previewCanvas.height = height
+  const previewCtx = previewCanvas.getContext('2d')
+  previewCtx.drawImage(sourceImage, 0, 0, width, height)
+
+  if (watermark && watermark.width && watermark.height) {
+    const targetWidth = width * 0.2
+    const targetHeight = targetWidth * (watermark.height / watermark.width)
+    const margin = Math.max(10, Math.round(Math.min(width, height) * 0.04))
+    const x = width - targetWidth - margin
+    const y = height - targetHeight - margin
+    previewCtx.drawImage(watermark, x, y, targetWidth, targetHeight)
+  }
+
+  const mimeType = getMimeTypeFromDataUrl(base64Data)
+  try {
+    if (mimeType === 'image/jpeg' || mimeType === 'image/webp') {
+      return previewCanvas.toDataURL(mimeType, 0.92)
+    }
+    return previewCanvas.toDataURL(mimeType)
+  } catch (error) {
+    console.warn('Falling back to PNG for watermarked preview:', error)
+    return previewCanvas.toDataURL('image/png')
+  }
+}
 export default function App() {
   console.log('🚀 App component rendering...')
   
@@ -76,6 +142,62 @@ export default function App() {
   const [showMobileModeSelector, setShowMobileModeSelector] = useState(false)
   const [showDesktopModeSelector, setShowDesktopModeSelector] = useState(false)
   const [cloudUrls, setCloudUrls] = useState({}) // Store cloud URLs for photos
+  const [watermarkedOutputs, setWatermarkedOutputs] = useState({})
+  const watermarkedOutputsRef = useRef({})
+  useEffect(() => {
+    watermarkedOutputsRef.current = watermarkedOutputs
+  }, [watermarkedOutputs])
+  
+  useEffect(() => {
+    if (photos.length === 0) {
+      if (Object.keys(watermarkedOutputsRef.current).length) {
+        watermarkedOutputsRef.current = {}
+        setWatermarkedOutputs({})
+      }
+      return
+    }
+    const validIds = new Set(photos.map(photo => photo.id))
+    const storedIds = Object.keys(watermarkedOutputsRef.current)
+    const hasOrphans = storedIds.some(id => !validIds.has(id))
+    if (hasOrphans) {
+      const next = storedIds.reduce((acc, id) => {
+        if (validIds.has(id)) {
+          acc[id] = watermarkedOutputsRef.current[id]
+        }
+        return acc
+      }, {})
+      watermarkedOutputsRef.current = next
+      setWatermarkedOutputs(next)
+    }
+  }, [photos])
+  useEffect(() => {
+    let cancelled = false
+    const ensureWatermarkedPreviews = async () => {
+      for (const photo of photos) {
+        if (cancelled || photo.isBusy) continue
+        const base64 = imageData.outputs[photo.id]
+        if (!base64 || watermarkedOutputsRef.current[photo.id]) continue
+        try {
+          const watermarked = await buildWatermarkedPreview(base64)
+          if (cancelled) return
+          watermarkedOutputsRef.current = {
+            ...watermarkedOutputsRef.current,
+            [photo.id]: watermarked
+          }
+          setWatermarkedOutputs(current => ({
+            ...current,
+            [photo.id]: watermarked
+          }))
+        } catch (error) {
+          console.warn('Failed generating watermarked preview:', error)
+        }
+      }
+    }
+    ensureWatermarkedPreviews()
+    return () => {
+      cancelled = true
+    }
+  }, [photos])
   
   const videoRef = useRef(null)
   // Auto-create GIF when there are ready photos and no GIF yet
@@ -450,6 +572,9 @@ export default function App() {
     currentPhotoId,
     photosCount: photos.length
   })
+  const aiPhotoSrc = currentPhotoId
+    ? (watermarkedOutputs[currentPhotoId] || imageData.outputs[currentPhotoId] || null)
+    : null
   // Test render dulu
   console.log('🎨 About to return JSX...')
   return (
@@ -938,7 +1063,7 @@ export default function App() {
                     <p>Sedang memproses...</p>
                   </div>
                 ) : (
-                  <img src={imageData.outputs[currentPhotoId]} alt="Hasil AI" />
+                  <img src={aiPhotoSrc || imageData.outputs[currentPhotoId]} alt="Hasil AI" />
                 )}
               </div>
               <div className="photoSide">
