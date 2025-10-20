@@ -152,6 +152,7 @@ export default function App() {
   const [showDesktopModeSelector, setShowDesktopModeSelector] = useState(false)
   const [activeResultTab, setActiveResultTab] = useState('ai')
   const [isMobileResults, setIsMobileResults] = useState(false)
+  const [cameraAspectRatio, setCameraAspectRatio] = useState(16 / 9)
   const [cloudUrls, setCloudUrls] = useState({}) // Store cloud URLs for photos
   const [watermarkedOutputs, setWatermarkedOutputs] = useState({})
   const watermarkedOutputsRef = useRef({})
@@ -269,23 +270,44 @@ export default function App() {
         throw new Error('getUserMedia tidak didukung di browser ini')
       }
       
+      const highResConstraints = {
+        audio: false,
+        video: {
+          width: {ideal: 1920},
+          height: {ideal: 1080},
+          aspectRatio: {ideal: 16 / 9},
+          facingMode: {ideal: 'user'}
+        }
+      }
+      const mediumResConstraints = {
+        audio: false,
+        video: {
+          width: {ideal: 1280},
+          height: {ideal: 720},
+          aspectRatio: {ideal: 16 / 9},
+          facingMode: {ideal: 'user'}
+        }
+      }
+
       // Try different video constraints
       let stream
       try {
         // Try with high resolution first
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: {width: {ideal: 1920}, height: {ideal: 1080}},
-          audio: false,
-          facingMode: {ideal: 'user'}
-        })
+        stream = await navigator.mediaDevices.getUserMedia(highResConstraints)
       } catch (error) {
-        console.log('High resolution failed, trying medium...')
-        // Try with medium resolution
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: {width: {ideal: 1280}, height: {ideal: 720}},
-          audio: false,
-          facingMode: {ideal: 'user'}
-        })
+        console.log('High resolution failed, trying medium...', error)
+        try {
+          // Try with medium resolution
+          stream = await navigator.mediaDevices.getUserMedia(mediumResConstraints)
+        } catch (fallbackError) {
+          console.log('Medium resolution failed, falling back to default constraints...', fallbackError)
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: {
+              facingMode: {ideal: 'user'}
+            }
+          })
+        }
       }
       
       console.log('Video stream obtained:', stream)
@@ -297,6 +319,16 @@ export default function App() {
         const squareSize = Math.min(videoWidth, videoHeight)
         canvas.width = squareSize
         canvas.height = squareSize
+        if (videoWidth && videoHeight) {
+          const ratio = videoWidth / videoHeight
+          if (Number.isFinite(ratio) && ratio > 0) {
+            setCameraAspectRatio(ratio)
+          } else {
+            setCameraAspectRatio(16 / 9)
+          }
+        } else {
+          setCameraAspectRatio(16 / 9)
+        }
         console.log('Video setup complete:', {videoWidth, videoHeight, squareSize})
         setIsLoading(false)
       }
@@ -894,6 +926,10 @@ export default function App() {
           {/* Canvas 1: Kamera */}
           <div
             className="camera"
+            style={{aspectRatio: cameraAspectRatio,
+            maxWidth: `calc(${cameraAspectRatio} * 420px)` // contoh batas tinggi 420px
+            }}
+
             onClick={() => {
               hideGif()
               setFocusedId(null)
@@ -1280,12 +1316,6 @@ export default function App() {
           <div className="desktopModeContent">
             <div className="desktopModeHeader">
               <h2 className="desktopModeTitle">?? Pilih Mode Foto</h2>
-              <button 
-                className="desktopModeClose"
-                onClick={() => setShowDesktopModeSelector(false)}
-              >
-                <span className="icon">close</span>
-              </button>
             </div>
             
             <div className="desktopModeGrid">

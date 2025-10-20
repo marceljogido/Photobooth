@@ -327,5 +327,4 @@ app.listen(PORT, () => {
   console.log(`📡 FTP configured: ${!!(ftpConfig.ftpAddress && ftpConfig.ftpUsername && ftpConfig.ftpPassword)}`)
   console.log(`☁️ Nextcloud configured: ${!!(ncConfig.serverUrl && ncConfig.webdavRoot && ncConfig.username && ncConfig.password)}`)
   console.log(`🩺 Health check: http://localhost:${PORT}/health`)
-  console.log(`⚙️ FTP Config UI: http://localhost:${PORT}/ftpconfig.html`)
 })
