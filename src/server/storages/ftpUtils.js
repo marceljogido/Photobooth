@@ -2,6 +2,7 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
 */
+import 'dotenv/config'
 import { Client } from 'basic-ftp'
 import fs from 'fs'
 import path from 'path'
