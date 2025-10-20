@@ -2,7 +2,7 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
 */
-import React, {useRef, useState, useCallback, useEffect} from 'react'
+import React, {useRef, useState, useCallback, useEffect, useMemo} from 'react'
 import QRCode from 'qrcode'
 import c from 'clsx'
 import {
@@ -153,12 +153,40 @@ export default function App() {
   const [activeResultTab, setActiveResultTab] = useState('ai')
   const [isMobileResults, setIsMobileResults] = useState(false)
   const [cameraAspectRatio, setCameraAspectRatio] = useState(16 / 9)
+  const [shouldRotateVideo, setShouldRotateVideo] = useState(false)
   const [cloudUrls, setCloudUrls] = useState({}) // Store cloud URLs for photos
   const [watermarkedOutputs, setWatermarkedOutputs] = useState({})
+  const [isViewportPortrait, setIsViewportPortrait] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.innerHeight >= window.innerWidth
+  })
   const watermarkedOutputsRef = useRef({})
   useEffect(() => {
     watermarkedOutputsRef.current = watermarkedOutputs
   }, [watermarkedOutputs])
+  useEffect(() => {
+    const updateOrientation = () => {
+      if (typeof window === 'undefined') return
+      setIsViewportPortrait(window.innerHeight >= window.innerWidth)
+    }
+    updateOrientation()
+    window.addEventListener('resize', updateOrientation)
+    window.addEventListener('orientationchange', updateOrientation)
+    return () => {
+      window.removeEventListener('resize', updateOrientation)
+      window.removeEventListener('orientationchange', updateOrientation)
+    }
+  }, [])
+  const cameraStyle = useMemo(() => {
+    const aspect = cameraAspectRatio > 0 ? cameraAspectRatio : 1
+    const treatAsPortrait = aspect < 1 || isViewportPortrait
+    return {
+      aspectRatio: aspect,
+      width: treatAsPortrait ? 'min(78vw, 460px)' : 'min(90vw, 960px)',
+      maxHeight: treatAsPortrait ? 'min(75vh, 620px)' : '80vh',
+      margin: '0 auto'
+    }
+  }, [cameraAspectRatio, isViewportPortrait])
   
   useEffect(() => {
     if (photos.length === 0) {
@@ -270,21 +298,26 @@ export default function App() {
         throw new Error('getUserMedia tidak didukung di browser ini')
       }
       
+      const orientationQuery = window.matchMedia('(orientation: portrait)')
+      const isPortraitPreferred = orientationQuery.matches
+      const viewportPortrait = window.innerHeight >= window.innerWidth
+      const portraitDesired = isPortraitPreferred || viewportPortrait
+      const preferredAspect = portraitDesired ? 9 / 16 : 16 / 9
       const highResConstraints = {
         audio: false,
         video: {
-          width: {ideal: 1920},
-          height: {ideal: 1080},
-          aspectRatio: {ideal: 16 / 9},
+          width: {ideal: portraitDesired ? 1080 : 1920},
+          height: {ideal: portraitDesired ? 1920 : 1080},
+          aspectRatio: {ideal: preferredAspect},
           facingMode: {ideal: 'user'}
         }
       }
       const mediumResConstraints = {
         audio: false,
         video: {
-          width: {ideal: 1280},
-          height: {ideal: 720},
-          aspectRatio: {ideal: 16 / 9},
+          width: {ideal: portraitDesired ? 720 : 1280},
+          height: {ideal: portraitDesired ? 1280 : 720},
+          aspectRatio: {ideal: preferredAspect},
           facingMode: {ideal: 'user'}
         }
       }
@@ -321,13 +354,20 @@ export default function App() {
         canvas.height = squareSize
         if (videoWidth && videoHeight) {
           const ratio = videoWidth / videoHeight
-          if (Number.isFinite(ratio) && ratio > 0) {
-            setCameraAspectRatio(ratio)
-          } else {
-            setCameraAspectRatio(16 / 9)
-          }
+          const rotateForPortrait = portraitDesired && ratio > 1
+          setShouldRotateVideo(rotateForPortrait)
+          const displayRatio = (() => {
+            if (!Number.isFinite(ratio) || ratio <= 0) {
+              return rotateForPortrait ? 9 / 16 : 16 / 9
+            }
+            return rotateForPortrait
+              ? (videoHeight > 0 ? videoHeight / videoWidth : 9 / 16)
+              : ratio
+          })()
+          setCameraAspectRatio(displayRatio)
         } else {
-          setCameraAspectRatio(16 / 9)
+          setShouldRotateVideo(false)
+          setCameraAspectRatio(portraitDesired ? 9 / 16 : 16 / 9)
         }
         console.log('Video setup complete:', {videoWidth, videoHeight, squareSize})
         setIsLoading(false)
@@ -381,19 +421,38 @@ export default function App() {
     
     try {
       ctx.clearRect(0, 0, squareSize, squareSize)
+      ctx.save()
       ctx.setTransform(1, 0, 0, 1, 0, 0)
-      ctx.scale(-1, 1)
-      ctx.drawImage(
-        video,
-        sourceX,
-        sourceY,
-        sourceSize,
-        sourceSize,
-        -squareSize,
-        0,
-        squareSize,
-        squareSize
-      )
+      if (shouldRotateVideo) {
+        ctx.translate(squareSize, 0)
+        ctx.rotate(Math.PI / 2)
+        ctx.scale(-1, 1)
+        ctx.drawImage(
+          video,
+          sourceX,
+          sourceY,
+          sourceSize,
+          sourceSize,
+          0,
+          0,
+          squareSize,
+          squareSize
+        )
+      } else {
+        ctx.scale(-1, 1)
+        ctx.drawImage(
+          video,
+          sourceX,
+          sourceY,
+          sourceSize,
+          sourceSize,
+          -squareSize,
+          0,
+          squareSize,
+          squareSize
+        )
+      }
+      ctx.restore()
       
       const photoData = canvas.toDataURL('image/jpeg')
       const photoId = await snapPhoto(photoData)
@@ -926,9 +985,7 @@ export default function App() {
           {/* Canvas 1: Kamera */}
           <div
             className="camera"
-            style={{aspectRatio: cameraAspectRatio,
-            maxWidth: `calc(${cameraAspectRatio} * 420px)` // contoh batas tinggi 420px
-            }}
+            style={cameraStyle}
 
             onClick={() => {
               hideGif()
@@ -989,7 +1046,7 @@ export default function App() {
                 </div>
               )}
             </div>
-        <div className="cameraPreview">
+        <div className={c('cameraPreview', {portraitMode: shouldRotateVideo})}>
           <video
             ref={videoRef}
             muted
