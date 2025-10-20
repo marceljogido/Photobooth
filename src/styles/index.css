@@ -163,6 +163,10 @@ button .icon {
 /* Mobile header height override */
 @media (max-width: 768px) {
   .appHeader { height: 70px; box-sizing: border-box; }
+
+  .appLogo {
+    width: 44px;
+  }
 }
 
 .logoContainer {
@@ -173,6 +177,13 @@ button .icon {
   gap: 15px;
   max-width: 1400px;
   margin: 0 auto;
+}
+
+.appLogo {
+  width: clamp(42px, 5vw, 56px);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.35));
 }
 
 .cameraIcon {
@@ -1996,7 +2007,7 @@ main .canvasSection:first-child {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain !important;
   transition: all 0.3s ease;
   transform: rotateY(180deg);
   border-radius: 20px;
@@ -2011,7 +2022,7 @@ main .canvasSection:first-child {
     display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: cover !important;
     transition: all 0.3s ease;
     transform: rotateY(180deg);
     border-radius: 12px !important;
@@ -3722,8 +3733,20 @@ main .canvasSection:first-child {
     height: 65px;
   }
   
+  .appLogo {
+  width: clamp(2px, 1vw, 5px);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.35));
+}
+
+  
   .appTitle {
     font-size: 1.2rem;
+  }
+
+  .appLogo {
+    width: 38px;
   }
   
   .cameraIcon {
@@ -3762,6 +3785,10 @@ main .canvasSection:first-child {
   
   .appTitle {
     font-size: 1.1rem;
+  }
+
+  .appLogo {
+    width: 34px;
   }
   
   .cameraIcon {
@@ -4913,6 +4940,33 @@ main .canvasSection:first-child {
   cursor: not-allowed;
   transform: none;
   animation: pulse 2s ease-in-out infinite;
+}
+
+.countdownOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 12000;
+}
+
+.countdownCircle {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle at top, #60a5fa, #2563eb);
+  box-shadow:
+    0 0 20px rgba(59, 130, 246, 0.45),
+    0 20px 35px rgba(15, 23, 42, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 3px 8px rgba(15, 23, 42, 0.6);
 }
 
 @keyframes pulse {

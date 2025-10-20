@@ -185,8 +185,8 @@ export default function App() {
     const treatAsPortrait = aspect < 1 || isViewportPortrait
     return {
       aspectRatio: aspect,
-      width: treatAsPortrait ? 'min(78vw, 460px)' : 'min(90vw, 960px)',
-      maxHeight: treatAsPortrait ? 'min(75vh, 620px)' : '80vh',
+      width: treatAsPortrait ? 'min(78vw, 460px)' : 'min(90vw, 900px)',
+      maxHeight: treatAsPortrait ? 'min(75vh, 620px)' : '90vh',
       margin: '0 auto'
     }
   }, [cameraAspectRatio, isViewportPortrait])
@@ -888,8 +888,8 @@ export default function App() {
       {/* Header dengan Logo dan Nama Aplikasi */}
       <header className="appHeader">
         <div className="logoContainer">
-          <div className="cameraIcon">??</div>
-          <h1 className="appTitle">DigiOH Photobooth</h1>
+          <img src="/DIGIOH_Logomark.svg" alt="digiSelfie AI" className="appLogo" />
+          <h1 className="appTitle">digiSelfie AI</h1>
         </div>
       </header>
       <main>
@@ -1049,97 +1049,10 @@ export default function App() {
           </div>
         </div>
       )}
-      {/* Full Screen Countdown Overlay */}
+      {/* Countdown Overlay */}
       {countdown > 0 && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.9)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999,
-          backdropFilter: 'blur(10px)',
-          animation: 'countdownOverlay 0.3s ease-out'
-        }}>
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '30px'
-          }}>
-            {/* Countdown Number */}
-            <div style={{
-              width: '200px',
-              height: '200px',
-              borderRadius: '50%',
-              background: `conic-gradient(from 0deg, #ff6b6b 0%, #ff6b6b ${(4-countdown) * 33.33}%, rgba(255, 255, 255, 0.1) ${(4-countdown) * 33.33}%, rgba(255, 255, 255, 0.1) 100%)`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '80px',
-              fontWeight: 'bold',
-              color: '#fff',
-              textShadow: '0 0 20px rgba(255, 107, 107, 0.8)',
-              animation: 'countdownDramatic 1s ease-in-out infinite',
-              border: '8px solid rgba(255, 255, 255, 0.2)'
-            }}>
-              {countdown}
-            </div>
-            
-            {/* Message */}
-            <div style={{
-              textAlign: 'center',
-              color: '#fff'
-            }}>
-              <h2 style={{
-                fontSize: '36px',
-                margin: '0 0 15px 0',
-                fontWeight: 'bold',
-                textShadow: '0 2px 10px rgba(0, 0, 0, 0.5)'
-              }}>
-                Bersiap! ??
-              </h2>
-              <p style={{
-                fontSize: '20px',
-                margin: 0,
-                opacity: 0.9,
-                fontWeight: '500'
-              }}>
-                Foto akan diambil dalam {countdown} detik...
-              </p>
-            </div>
-            
-            {/* Cancel Button */}
-            <button 
-              onClick={() => setCountdown(0)}
-              style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: '2px solid rgba(255, 255, 255, 0.3)',
-                borderRadius: '50px',
-                padding: '12px 24px',
-                color: '#fff',
-                fontSize: '16px',
-                cursor: 'pointer',
-                backdropFilter: 'blur(10px)',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseOver={(e) => {
-                e.target.style.background = 'rgba(255, 255, 255, 0.2)'
-                e.target.style.borderColor = 'rgba(255, 255, 255, 0.5)'
-              }}
-              onMouseOut={(e) => {
-                e.target.style.background = 'rgba(255, 255, 255, 0.1)'
-                e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)'
-              }}
-            >
-              ? Batal
-            </button>
-          </div>
+        <div className="countdownOverlay" aria-live="assertive">
+          <div className="countdownCircle">{countdown}</div>
         </div>
       )}
       {/* Camera Page */}
