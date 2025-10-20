@@ -141,6 +141,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [countdown, setCountdown] = useState(0)
   const [showPreview, setShowPreview] = useState(false)
+  const [isProcessingPhoto, setIsProcessingPhoto] = useState(false)
   const [lastPhoto, setLastPhoto] = useState(null)
   const [qrCodes, setQrCodes] = useState({photo: null, gif: null})
   const [isUploading, setIsUploading] = useState(false)
@@ -156,11 +157,13 @@ export default function App() {
   const [shouldRotateVideo, setShouldRotateVideo] = useState(false)
   const [cloudUrls, setCloudUrls] = useState({}) // Store cloud URLs for photos
   const [watermarkedOutputs, setWatermarkedOutputs] = useState({})
+  const [preparedDownloads, setPreparedDownloads] = useState({})
   const [isViewportPortrait, setIsViewportPortrait] = useState(() => {
     if (typeof window === 'undefined') return false
     return window.innerHeight >= window.innerWidth
   })
   const watermarkedOutputsRef = useRef({})
+  const uploadTokenRef = useRef(0)
   useEffect(() => {
     watermarkedOutputsRef.current = watermarkedOutputs
   }, [watermarkedOutputs])
@@ -455,9 +458,8 @@ export default function App() {
       ctx.restore()
       
       const photoData = canvas.toDataURL('image/jpeg')
-      const photoId = await snapPhoto(photoData)
       setLastPhoto(photoData)
-      setCurrentPhotoId(photoId)
+      setCurrentPhotoId(null)
       setShowPreview(true)
       setDidJustSnap(true)
       setTimeout(() => setDidJustSnap(false), 1000)
@@ -572,6 +574,7 @@ export default function App() {
   }
   const retakePhoto = () => {
     // Bersihkan data global (store, imageData, gif)
+    uploadTokenRef.current += 1
     resetSession()
     
     // Reset state lokal untuk user experience yang bersih
@@ -581,6 +584,8 @@ export default function App() {
     setCurrentPage('camera')
     setCurrentPhotoId(null)
     setShowPreview(false)
+    setIsProcessingPhoto(false)
+    setPreparedDownloads({})
     setFocusedId(null)
     setLastPhoto(null)
     setDidJustSnap(false)
@@ -604,84 +609,224 @@ export default function App() {
     
     console.log('?? Reset aplikasi untuk user berikutnya')
   }
-  const proceedToResults = () => {
-    setCurrentPage('results')
-    setShowPreview(false)
-  }
-  const handleDownloadClick = async () => {
+  const prepareDownloadsForPhoto = useCallback(
+    async (photoId, {force = false} = {}) => {
+      if (!photoId) {
+        return false
+      }
+
+      const previousStatus = preparedDownloads[photoId]
+
+      if (!force) {
+        if (previousStatus === true) {
+          return true
+        }
+
+        if (previousStatus === 'error') {
+          return false
+        }
+      }
+
+      if (isUploading) {
+        return false
+      }
+
+      const targetPhoto = photos.find(photo => photo.id === photoId)
+      if (!targetPhoto || targetPhoto.isBusy) {
+        return false
+      }
+
+      const photoData = imageData.outputs[photoId]
+      if (!photoData) {
+        return false
+      }
+
+      const photoReady = !!(qrCodes.photo && cloudUrls[photoId])
+      const gifReady = !!(qrCodes.gif && cloudUrls.gif)
+
+      if (photoReady && gifReady && !force) {
+        setPreparedDownloads(prev => ({
+          ...prev,
+          [photoId]: true
+        }))
+        return true
+      }
+
+      const token = uploadTokenRef.current + 1
+      uploadTokenRef.current = token
+      setIsUploading(true)
+
+      try {
+        let ensuredGifUrl = gifUrl
+
+        if (!ensuredGifUrl) {
+          ensuredGifUrl = await makeGif()
+        }
+
+        if (!ensuredGifUrl) {
+          throw new Error('GIF is not available after generation')
+        }
+
+        if (uploadTokenRef.current !== token) {
+          return false
+        }
+
+        const photoResult = photoReady
+          ? {qrCode: qrCodes.photo, directUrl: cloudUrls[photoId]}
+          : await generateQRCodeFor(
+              photoData,
+              `digioh-photobooth-foto-${Date.now()}.jpg`,
+              photoId
+            )
+
+        if (uploadTokenRef.current !== token) {
+          return false
+        }
+
+        const gifResult = gifReady
+          ? {qrCode: qrCodes.gif, directUrl: cloudUrls.gif}
+          : await generateQRCodeFor(
+              ensuredGifUrl,
+              `digioh-photobooth-gif-${Date.now()}.gif`,
+              'gif'
+            )
+
+        if (!photoResult?.qrCode || !gifResult?.qrCode) {
+          throw new Error('QR code generation incomplete')
+        }
+
+        if (uploadTokenRef.current !== token) {
+          return false
+        }
+
+        setQrCodes({
+          photo: photoResult.qrCode,
+          gif: gifResult.qrCode
+        })
+
+        setPreparedDownloads(prev => ({
+          ...prev,
+          [photoId]: true
+        }))
+
+        return true
+      } catch (error) {
+        console.error('Error preparing downloads:', error)
+        if (uploadTokenRef.current === token) {
+          setPreparedDownloads(prev => ({
+            ...prev,
+            [photoId]: 'error'
+          }))
+        }
+        return false
+      } finally {
+        if (uploadTokenRef.current === token) {
+          setIsUploading(false)
+        }
+      }
+    },
+    [
+      cloudUrls,
+      generateQRCodeFor,
+      makeGif,
+      gifUrl,
+      isUploading,
+      photos,
+      preparedDownloads,
+      qrCodes
+    ]
+  )
+  useEffect(() => {
+    if (!currentPhotoId) {
+      return
+    }
+
+    const preparationStatus = preparedDownloads[currentPhotoId]
+
+    if (preparationStatus === true || preparationStatus === 'error') {
+      return
+    }
+
     if (isUploading) {
       return
     }
-    
+
+    const currentPhoto = photos.find(photo => photo.id === currentPhotoId)
+    if (!currentPhoto || currentPhoto.isBusy) {
+      return
+    }
+
+    if (!imageData.outputs[currentPhotoId]) {
+      return
+    }
+
+    prepareDownloadsForPhoto(currentPhotoId)
+  }, [
+    currentPhotoId,
+    isUploading,
+    photos,
+    preparedDownloads,
+    prepareDownloadsForPhoto
+  ])
+  const proceedToResults = async () => {
+    if (isProcessingPhoto) {
+      return
+    }
+    if (!lastPhoto) {
+      alert('? Foto tidak tersedia. Silakan ambil foto terlebih dahulu.')
+      return
+    }
+
+    setIsProcessingPhoto(true)
+    setShowPreview(false)
+
+    try {
+      const photoId = await snapPhoto(lastPhoto)
+      if (photoId) {
+        setCurrentPhotoId(photoId)
+        setCurrentPage('results')
+      } else {
+        throw new Error('ID foto tidak tersedia')
+      }
+    } catch (error) {
+      console.error('Error processing photo with AI:', error)
+      alert('? Gagal memproses foto. Silakan coba lagi.')
+      setShowPreview(true)
+    } finally {
+      setIsProcessingPhoto(false)
+    }
+  }
+  const handleDownloadClick = async () => {
+    if (isUploading) {
+      alert('? Sedang menyiapkan file. Mohon tunggu sebentar...')
+      return
+    }
+
     if (!currentPhotoId) {
       alert('? Foto tidak tersedia. Silakan ambil foto terlebih dahulu.')
       return
     }
-    
+
     const currentPhoto = photos.find(p => p.id === currentPhotoId)
     if (!currentPhoto || currentPhoto.isBusy) {
-      alert('? Foto atau GIF masih diproses. Silakan tunggu sebentar.')
+      alert('? Foto masih dipoles AI. Tunggu sejenak ya!')
       return
     }
-    
+
     if (gifInProgress) {
-      alert('? GIF sedang diproses. Silakan coba lagi setelah selesai.')
+      alert('? GIF masih dibuat. Coba lagi setelah selesai.')
       return
     }
-    
-    if (qrCodes.photo && qrCodes.gif) {
-      setShowDownloadModal(true)
-      return
+
+    if (!qrCodes.photo || !qrCodes.gif) {
+      const prepared = await prepareDownloadsForPhoto(currentPhotoId, {force: true})
+      if (!prepared) {
+        alert('? Hasil belum siap. Mohon tunggu sebentar lalu coba lagi.')
+        return
+      }
     }
-    
-    const photoData = imageData.outputs[currentPhotoId]
-    if (!photoData) {
-      alert('? Foto AI belum tersedia. Silakan tunggu sebentar.')
-      return
-    }
-    
-    setIsUploading(true)
-    
-    try {
-      let ensuredGifUrl = gifUrl
-      if (!ensuredGifUrl) {
-        ensuredGifUrl = await makeGif()
-      }
-      
-      if (!ensuredGifUrl) {
-        throw new Error('GIF is not available after generation')
-      }
-      
-      const photoResult = await generateQRCodeFor(
-        photoData,
-        `digioh-photobooth-foto-${Date.now()}.jpg`,
-        currentPhotoId
-      )
-      
-      const gifResult = await generateQRCodeFor(
-        ensuredGifUrl,
-        `digioh-photobooth-gif-${Date.now()}.gif`,
-        'gif'
-      )
-      
-      if (!photoResult?.qrCode) {
-        throw new Error('Photo QR missing')
-      }
-      if (!gifResult?.qrCode) {
-        throw new Error('GIF QR missing')
-      }
-      
-      setQrCodes({
-        photo: photoResult?.qrCode || null,
-        gif: gifResult?.qrCode || null
-      })
-      setShowDownloadModal(true)
-    } catch (error) {
-      console.error('? Failed preparing QR codes:', error)
-      alert('? Gagal menyiapkan QR download. Silakan coba lagi.')
-    } finally {
-      setIsUploading(false)
-    }
+
+    setShowDownloadModal(true)
   }
   const handleModeHover = useCallback((modeInfo, event) => {
     if (!modeInfo) {
@@ -850,7 +995,7 @@ export default function App() {
                 />
                 <div className="photoOverlay">
                   <div className="photoStatus">
-                    {photos.find(p => p.id === currentPhotoId)?.isBusy ? (
+                    {(isProcessingPhoto || photos.find(p => p.id === currentPhotoId)?.isBusy) ? (
                       <div className="processingStatus">
                         <div className="spinner"></div>
                         <p>AI sedang memproses foto...</p>
@@ -869,6 +1014,7 @@ export default function App() {
                 <button 
                   className="btn btnSecondary"
                   onClick={retakePhoto}
+                  disabled={isProcessingPhoto}
                 >
                   <span className="icon">refresh</span>
                   Retake
@@ -876,13 +1022,30 @@ export default function App() {
                 <button 
                   className="btn btnPrimary"
                   onClick={proceedToResults}
-                  disabled={photos.find(p => p.id === currentPhotoId)?.isBusy}
+                  disabled={isProcessingPhoto}
                 >
-                  <span className="icon">arrow_forward</span>
-                  Lanjut
+                  <span className="icon">
+                    {isProcessingPhoto ? 'autorenew' : 'arrow_forward'}
+                  </span>
+                  {isProcessingPhoto ? 'Memproses...' : 'Lanjut'}
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+      {isProcessingPhoto && (
+        <div className="aiProcessingOverlay" role="alert" aria-live="assertive">
+          <div className="aiProcessingCard">
+            <div className="aiProcessingSpinner">
+              <span className="dot dot-1"></span>
+              <span className="dot dot-2"></span>
+              <span className="dot dot-3"></span>
+            </div>
+            <h3 className="aiProcessingTitle">AI lagi memoles fotomu</h3>
+            <p className="aiProcessingSubtitle">
+              Pegang dulu posenya ya… hasil kece bakal muncul sebentar lagi!
+            </p>
           </div>
         </div>
       )}

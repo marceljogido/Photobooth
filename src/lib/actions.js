@@ -36,7 +36,7 @@ const getWatermarkImage = async () => {
   }
   return watermarkImagePromise
 }
-const model = 'gemini-2.5-flash-preview-image-generation'
+const model = 'gemini-2.0-flash-preview-image-generation'
 
 export const init = () => {
   if (get().didInit) {

@@ -4924,6 +4924,163 @@ main .canvasSection:first-child {
   }
 }
 
+.aiProcessingOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: rgba(6, 12, 24, 0.88);
+  backdrop-filter: blur(18px);
+  z-index: 12000;
+  animation: aiProcessingFadeIn 0.35s ease-out;
+  padding: 30px;
+}
+
+.aiProcessingCard {
+  position: relative;
+  width: min(90vw, 420px);
+  padding: 48px 36px;
+  border-radius: 26px;
+  background: linear-gradient(140deg, rgba(99, 102, 241, 0.18), rgba(139, 92, 246, 0.22));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.45);
+  overflow: hidden;
+}
+
+.aiProcessingCard::before {
+  content: '';
+  position: absolute;
+  inset: -60%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(99, 102, 241, 0.05),
+    rgba(56, 189, 248, 0.3),
+    rgba(236, 72, 153, 0.15),
+    rgba(99, 102, 241, 0.05)
+  );
+  animation: aiProcessingSpin 12s linear infinite;
+  filter: blur(24px);
+  opacity: 0.6;
+}
+
+.aiProcessingCard::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 55%);
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.aiProcessingSpinner {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 28px;
+  z-index: 1;
+}
+
+.aiProcessingSpinner::after {
+  content: '';
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  animation: aiProcessingPulse 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.aiProcessingSpinner .dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #34d399);
+  box-shadow:
+    0 0 15px rgba(96, 165, 250, 0.65),
+    0 0 40px rgba(52, 211, 153, 0.25);
+  animation: aiProcessingBounce 0.85s infinite ease-in-out;
+}
+
+.aiProcessingSpinner .dot-2 {
+  animation-delay: 0.15s;
+}
+
+.aiProcessingSpinner .dot-3 {
+  animation-delay: 0.3s;
+}
+
+.aiProcessingTitle {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 12px 0;
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  background: linear-gradient(135deg, #93c5fd, #c4b5fd);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.aiProcessingSubtitle {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+
+@keyframes aiProcessingFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes aiProcessingBounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.6;
+  }
+  40% {
+    transform: translateY(-16px);
+    opacity: 1;
+  }
+}
+
+@keyframes aiProcessingPulse {
+  0%,
+  100% {
+    transform: scale(0.95);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.6;
+  }
+}
+
+@keyframes aiProcessingSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .btnAccent {
   background: linear-gradient(135deg, #ec4899, #8b5cf6);
   color: white;
