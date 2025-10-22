@@ -31,6 +31,50 @@ const RESULT_TAB_OPTIONS = [
   {key: 'gif', label: 'Hasil GIF', icon: 'movie'}
 ]
 
+const PORTRAIT_ASPECT = 9 / 16
+const LANDSCAPE_ASPECT = 16 / 9
+const FORCE_PORTRAIT_CAPTURE = false
+
+const ensurePositive = (value, fallback) =>
+  Number.isFinite(value) && value > 0 ? value : fallback
+
+const computeCaptureGeometry = (videoWidth, videoHeight, {portrait, rotate}) => {
+  const targetAspect = portrait ? PORTRAIT_ASPECT : LANDSCAPE_ASPECT
+  const safeWidth = ensurePositive(videoWidth, portrait ? 1080 : 1920)
+  const safeHeight = ensurePositive(videoHeight, portrait ? 1920 : 1080)
+
+  const effectiveWidth = rotate ? safeHeight : safeWidth
+  const effectiveHeight = rotate ? safeWidth : safeHeight
+  const effectiveAspect = ensurePositive(effectiveWidth / effectiveHeight, targetAspect)
+
+  let cropWidthEffective = effectiveWidth
+  let cropHeightEffective = effectiveHeight
+
+  if (Math.abs(effectiveAspect - targetAspect) > 0.001) {
+    if (effectiveAspect > targetAspect) {
+      cropWidthEffective = cropHeightEffective * targetAspect
+    } else {
+      cropHeightEffective = cropWidthEffective / targetAspect
+    }
+  }
+
+  const sourceWidth = rotate ? cropHeightEffective : cropWidthEffective
+  const sourceHeight = rotate ? cropWidthEffective : cropHeightEffective
+
+  const sourceX = Math.max(0, (safeWidth - sourceWidth) / 2)
+  const sourceY = Math.max(0, (safeHeight - sourceHeight) / 2)
+
+  return {
+    canvasWidth: Math.round(cropWidthEffective),
+    canvasHeight: Math.round(cropHeightEffective),
+    sourceWidth,
+    sourceHeight,
+    sourceX,
+    sourceY,
+    aspect: targetAspect
+  }
+}
+
 const loadImage = src =>
   new Promise((resolve, reject) => {
     if (typeof Image === 'undefined') {
@@ -153,8 +197,11 @@ export default function App() {
   const [showDesktopModeSelector, setShowDesktopModeSelector] = useState(false)
   const [activeResultTab, setActiveResultTab] = useState('ai')
   const [isMobileResults, setIsMobileResults] = useState(false)
-  const [cameraAspectRatio, setCameraAspectRatio] = useState(16 / 9)
+  const [cameraAspectRatio, setCameraAspectRatio] = useState(
+    FORCE_PORTRAIT_CAPTURE ? PORTRAIT_ASPECT : LANDSCAPE_ASPECT
+  )
   const [shouldRotateVideo, setShouldRotateVideo] = useState(false)
+  const [isPortraitCapture, setIsPortraitCapture] = useState(FORCE_PORTRAIT_CAPTURE)
   const [cloudUrls, setCloudUrls] = useState({}) // Store cloud URLs for photos
   const [watermarkedOutputs, setWatermarkedOutputs] = useState({})
   const [preparedDownloads, setPreparedDownloads] = useState({})
@@ -182,14 +229,14 @@ export default function App() {
   }, [])
   const cameraStyle = useMemo(() => {
     const aspect = cameraAspectRatio > 0 ? cameraAspectRatio : 1
-    const treatAsPortrait = aspect < 1 || isViewportPortrait
+    const treatAsPortrait = aspect < 1 || isViewportPortrait || isPortraitCapture
     return {
       aspectRatio: aspect,
-      width: treatAsPortrait ? 'min(78vw, 460px)' : 'min(90vw, 900px)',
-      maxHeight: treatAsPortrait ? 'min(75vh, 620px)' : '90vh',
+      width: treatAsPortrait ? 'min(85vw, 560px)' : 'min(90vw, 900px)',
+      maxHeight: treatAsPortrait ? 'min(92vh, 960px)' : '90vh',
       margin: '0 auto'
     }
-  }, [cameraAspectRatio, isViewportPortrait])
+  }, [cameraAspectRatio, isViewportPortrait, isPortraitCapture])
   
   useEffect(() => {
     if (photos.length === 0) {
@@ -304,7 +351,7 @@ export default function App() {
       const orientationQuery = window.matchMedia('(orientation: portrait)')
       const isPortraitPreferred = orientationQuery.matches
       const viewportPortrait = window.innerHeight >= window.innerWidth
-      const portraitDesired = isPortraitPreferred || viewportPortrait
+      const portraitDesired = FORCE_PORTRAIT_CAPTURE || isPortraitPreferred || viewportPortrait
       const preferredAspect = portraitDesired ? 9 / 16 : 16 / 9
       const highResConstraints = {
         audio: false,
@@ -352,27 +399,35 @@ export default function App() {
       // Wait for video to load
       videoRef.current.onloadedmetadata = () => {
         const {videoWidth, videoHeight} = videoRef.current
-        const squareSize = Math.min(videoWidth, videoHeight)
-        canvas.width = squareSize
-        canvas.height = squareSize
-        if (videoWidth && videoHeight) {
-          const ratio = videoWidth / videoHeight
-          const rotateForPortrait = portraitDesired && ratio > 1
-          setShouldRotateVideo(rotateForPortrait)
-          const displayRatio = (() => {
-            if (!Number.isFinite(ratio) || ratio <= 0) {
-              return rotateForPortrait ? 9 / 16 : 16 / 9
-            }
-            return rotateForPortrait
-              ? (videoHeight > 0 ? videoHeight / videoWidth : 9 / 16)
-              : ratio
-          })()
-          setCameraAspectRatio(displayRatio)
-        } else {
-          setShouldRotateVideo(false)
-          setCameraAspectRatio(portraitDesired ? 9 / 16 : 16 / 9)
-        }
-        console.log('Video setup complete:', {videoWidth, videoHeight, squareSize})
+        const safeWidth = ensurePositive(videoWidth, portraitDesired ? 1080 : 1920)
+        const safeHeight = ensurePositive(videoHeight, portraitDesired ? 1920 : 1080)
+        const ratio = ensurePositive(safeWidth / safeHeight, portraitDesired ? PORTRAIT_ASPECT : LANDSCAPE_ASPECT)
+        const rotateForPortrait = portraitDesired && ratio > 1
+
+        const geometry = computeCaptureGeometry(safeWidth, safeHeight, {
+          portrait: portraitDesired,
+          rotate: rotateForPortrait
+        })
+
+        canvas.width = geometry.canvasWidth
+        canvas.height = geometry.canvasHeight
+
+        setShouldRotateVideo(rotateForPortrait)
+        setIsPortraitCapture(portraitDesired)
+        const displayAspect = ensurePositive(
+          geometry.canvasWidth / geometry.canvasHeight,
+          portraitDesired ? PORTRAIT_ASPECT : LANDSCAPE_ASPECT
+        )
+        setCameraAspectRatio(displayAspect)
+
+        console.log('Video setup complete:', {
+          videoWidth: safeWidth,
+          videoHeight: safeHeight,
+          canvasWidth: geometry.canvasWidth,
+          canvasHeight: geometry.canvasHeight,
+          rotateForPortrait,
+          targetAspect: geometry.aspect
+        })
         setIsLoading(false)
       }
       
@@ -416,30 +471,42 @@ export default function App() {
     
     const video = videoRef.current
     const {videoWidth, videoHeight} = video
-    const squareSize = canvas.width
-    const sourceSize = Math.min(videoWidth, videoHeight)
-    const sourceX = (videoWidth - sourceSize) / 2
-    const sourceY = (videoHeight - sourceSize) / 2
+    const geometry = computeCaptureGeometry(videoWidth, videoHeight, {
+      portrait: isPortraitCapture,
+      rotate: shouldRotateVideo
+    })
+
+    const {
+      canvasWidth,
+      canvasHeight,
+      sourceWidth,
+      sourceHeight,
+      sourceX,
+      sourceY
+    } = geometry
+
+    canvas.width = Math.max(1, Math.round(canvasWidth))
+    canvas.height = Math.max(1, Math.round(canvasHeight))
     setIsLoading(true)
     
     try {
-      ctx.clearRect(0, 0, squareSize, squareSize)
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
       ctx.save()
       ctx.setTransform(1, 0, 0, 1, 0, 0)
       if (shouldRotateVideo) {
-        ctx.translate(squareSize, 0)
+        ctx.translate(canvas.width, 0)
         ctx.rotate(Math.PI / 2)
         ctx.scale(-1, 1)
         ctx.drawImage(
           video,
           sourceX,
           sourceY,
-          sourceSize,
-          sourceSize,
+          sourceWidth,
+          sourceHeight,
           0,
           0,
-          squareSize,
-          squareSize
+          canvas.height,
+          canvas.width
         )
       } else {
         ctx.scale(-1, 1)
@@ -447,17 +514,17 @@ export default function App() {
           video,
           sourceX,
           sourceY,
-          sourceSize,
-          sourceSize,
-          -squareSize,
+          sourceWidth,
+          sourceHeight,
+          -canvas.width,
           0,
-          squareSize,
-          squareSize
+          canvas.width,
+          canvas.height
         )
       }
       ctx.restore()
       
-      const photoData = canvas.toDataURL('image/jpeg')
+      const photoData = canvas.toDataURL('image/jpeg', 0.95)
       setLastPhoto(photoData)
       setCurrentPhotoId(null)
       setShowPreview(true)
@@ -1060,7 +1127,7 @@ export default function App() {
         <>
           {/* Canvas 1: Kamera */}
           <div
-            className="camera"
+            className={c('camera', {portraitMode: isPortraitCapture})}
             style={cameraStyle}
 
             onClick={() => {
