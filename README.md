@@ -1,20 +1,63 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# digiSelfie AI Photobooth
 
-# Run and deploy your AI Studio app
+Booth swafoto interaktif yang memadukan kamera langsung dengan transformasi artistik berbasis Google Gemini 2.5 Flash Image. Pengunjung dapat memilih gaya favorit, memproses foto secara instan, dan mengunduh hasilnya melalui QR code sebagai foto statis ber-watermark dan GIF sebelum-sesudah.
 
-This contains everything you need to run your app locally.
+## Fitur Utama
+- **Pemilihan gaya AI**: Renaissance, Cartoon, Statue, Banana, 80s, 19th Century, Anime, Psychedelic, 8-bit, Big Beard, Comic Book, Old, serta opsi prompt kustom.
+- **Workflow kamera adaptif**: Countdown 3 detik, deteksi orientasi otomatis, serta handling error izin/perangkat.
+- **Pratinjau dan watermark**: Preview hasil foto sebelum diproses AI dengan watermark bawaan acara.
+- **Generasi GIF otomatis**: Memadukan foto asli dan hasil AI menggunakan `gifenc`.
+- **Distribusi cepat**: Hasil foto dan GIF dapat dipindai lewat QR code, lengkap dengan upload ke Nextcloud atau FTP sebagai penyimpanan utama.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1_Eq-HdJY78rIBAxdri8KrW6fP4yBwPNL
+## Prasyarat
+- Node.js 18 atau lebih baru.
+- Akun Google AI Studio dengan akses ke Gemini 2.5 Flash Image.
+- Kredensial Nextcloud atau FTP (opsional, untuk upload otomatis).
+- Berkas watermark PNG (default: `public/logowatermark.png`).
 
-## Run Locally
+## Persiapan Lingkungan
+1. Salin `.env.example` menjadi `.env` lalu isi variabel berikut:
+   - `GEMINI_API_KEY`
+   - `STORAGE_PROVIDER` (`nextcloud` atau `ftp`)
+   - Kredensial Nextcloud/FTP sesuai pilihan penyimpanan
+   - `WATERMARK_FILE_PATH` bila menggunakan watermark selain default
+2. Pasang dependensi:
+   ```bash
+   npm install
+   ```
 
-**Prerequisites:**  Node.js
+## Menjalankan Aplikasi
+- **Mode pengembangan lengkap (frontend + backend)**  
+  ```bash
+  npm run dev:full
+  ```
+- **Hanya frontend Vite**  
+  ```bash
+  npm run dev
+  ```
+- **Produksi lokal**  
+  ```bash
+  npm run start
+  ```
+  Perintah ini melakukan build Vite lalu menjalankan server Express.
 
+Antarmuka secara default dapat diakses di `http://localhost:5173`, sedangkan backend Express berada di `http://localhost:3001`.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Struktur Proyek Singkat
+- `src/components/App.jsx` – alur utama UI kamera, pemilihan mode, preview, serta modal download.
+- `src/lib/actions.js` – logika pemrosesan foto, integrasi Gemini, dan pembuatan GIF.
+- `src/lib/llm.js` – pembungkus SDK `@google/genai` dengan retry dan pengaturan safety.
+- `src/lib/modes.js` – daftar gaya AI dan prompt bawaan.
+- `src/server/server.js` – layanan Express untuk upload, watermark, serta integrasi Nextcloud/FTP.
+- `System.md` – dokumentasi sistem dan konsep produk lengkap.
+
+## Testing Lapangan
+- Uji izin kamera pada perangkat target (Windows/Mac/Linux).
+- Pastikan koneksi Nextcloud/FTP berhasil lewat endpoint konfigurasi `/api/{provider}/test`.
+- Coba scan QR dengan perangkat iOS dan Android untuk memastikan URL publik dapat diakses.
+- Simulasikan kegagalan jaringan untuk memverifikasi fallback penyimpanan lokal.
+
+## Lisensi dan Atribusi
+- Aset logo dan watermark mengikuti hak milik PT. Digital Open House.
+- Ketergantungan pihak ketiga tunduk pada lisensi masing-masing (lihat `package.json`).
+- Teknologi AI menggunakan Google Gemini 2.5 Flash Image.

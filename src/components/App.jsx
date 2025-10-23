@@ -161,7 +161,7 @@ const buildWatermarkedPreview = async base64Data => {
   }
 }
 export default function App() {
-  console.log('?? App component rendering...')
+  console.log('🚀 App component rendering...')
   
   useEffect(() => {
     init()
@@ -170,29 +170,29 @@ export default function App() {
   let photos, customPrompt, activeMode, gifInProgress, gifUrl
   
   try {
-    console.log('?? Attempting to load store...')
+    console.log('🛠️ Attempting to load store...')
     photos = useStore.use.photos()
     customPrompt = useStore.use.customPrompt()
     activeMode = useStore.use.activeMode()
     gifInProgress = useStore.use.gifInProgress()
     gifUrl = useStore.use.gifUrl()
-    console.log('? Store state loaded:', { 
+    console.log('📦 Store state loaded:', { 
       photosCount: photos.length, 
       activeMode, 
       customPromptLength: customPrompt.length 
     })
   } catch (error) {
-    console.error('? Error loading store:', error)
+    console.error('⚠️ Error loading store:', error)
     // Fallback values
     photos = []
     customPrompt = ''
     activeMode = 'renaissance'
     gifInProgress = false
     gifUrl = null
-    console.log('?? Using fallback values')
+    console.log('🛟 Using fallback values')
   }
   
-  console.log('?? About to render App component...')
+  console.log('🧩 About to render App component...')
   
   const [videoActive, setVideoActive] = useState(false)
   const [didInitVideo, setDidInitVideo] = useState(false)
@@ -355,7 +355,7 @@ export default function App() {
     try {
       const readyCount = photos.filter(p => !p.isBusy).length
       if (readyCount > 0 && !gifInProgress && !gifUrl) {
-        console.log('?? Auto-creating GIF because photos are ready...')
+        console.log('🎞️ Auto-creating GIF because photos are ready...')
         makeGif()
       }
     } catch (e) {
@@ -577,14 +577,14 @@ export default function App() {
     }
   }
   const uploadToFTP = async (imageUrl, filename) => {
-    console.log('?? Starting FTP upload for:', filename)
-    console.log('?? Image URL type:', imageUrl.startsWith('data:') ? 'Base64' : 'URL')
+    console.log('📤 Starting FTP upload for:', filename)
+    console.log('🔍 Image URL type:', imageUrl.startsWith('data:') ? 'Base64' : 'URL')
     
     try {
       // Convert base64 to blob
       const response = await fetch(imageUrl)
       const blob = await response.blob()
-      console.log('?? Blob created, size:', blob.size)
+      console.log('📦 Blob created, size:', blob.size)
       
       // Upload ke FTP server
       const formData = new FormData()
@@ -596,12 +596,12 @@ export default function App() {
         body: formData
       })
       
-      console.log('?? FTP server response status:', uploadResponse.status)
+      console.log('📡 FTP server response status:', uploadResponse.status)
       
       if (uploadResponse.ok) {
         const result = await uploadResponse.json()
         if (result.success && result.directLink) {
-          console.log('? FTP upload successful:', result.directLink)
+          console.log('✅ FTP upload successful:', result.directLink)
           return {
             url: result.directLink,
             qrCode: result.qrCode
@@ -616,8 +616,8 @@ export default function App() {
     }
   }
   const generateQRCodeFor = async (imageUrl, filename = null, cacheKey = null) => {
-    console.log('?? generateQRCodeFor called:', {filename, cacheKey})
-    console.log('?? Image URL for QR:', imageUrl)
+    console.log('🧾 generateQRCodeFor called:', {filename, cacheKey})
+    console.log('🌐 Image URL for QR:', imageUrl)
     
     const defaultFilename = filename || `digioh-photobooth-${Date.now()}.jpg`
     
@@ -666,7 +666,7 @@ export default function App() {
           }))
         }
         
-        console.log('?? QR Code generated with direct image URL fallback')
+        console.log('✅ QR Code generated with direct image URL fallback')
         
         return {
           qrCode: qrCodeDataURL,
@@ -714,7 +714,7 @@ export default function App() {
       videoRef.current.srcObject = null
     }
     
-    console.log('?? Reset aplikasi untuk user berikutnya')
+    console.log('🔄 Reset aplikasi untuk user berikutnya')
   }
   const prepareDownloadsForPhoto = useCallback(
     async (photoId, {force = false} = {}) => {
@@ -955,8 +955,8 @@ export default function App() {
   }, [])
   // Tidak ada auto-start video - user harus klik tombol "Mari Berfoto!" dulu
   
-  console.log('?? Rendering JSX now...')
-  console.log('?? Current state:', {
+  console.log('🖥️ Rendering JSX now...')
+  console.log('🧠 Current state:', {
     currentPage,
     videoActive,
     showPreview,
@@ -971,7 +971,7 @@ export default function App() {
     : null
   const renderResultSection = section => {
     const isAi = section === 'ai'
-    const heading = isAi ? '?? Hasil AI' : '??? GIF'
+    const heading = isAi ? '✨ Hasil AI' : '🎞️ GIF'
     const isBusy = isAi ? currentPhoto?.isBusy : gifInProgress || !gifUrl
     const src = isAi
       ? aiPhotoSrc || (currentPhotoId ? imageData.outputs[currentPhotoId] : null)
@@ -993,7 +993,7 @@ export default function App() {
     )
   }
   // Test render dulu
-  console.log('?? About to return JSX...')
+  console.log('↩️ About to return JSX...')
   return (
     <>
       {/* Header dengan Logo dan Nama Aplikasi */}
@@ -1048,7 +1048,7 @@ export default function App() {
               />
               
               <div style={{marginTop: '15px', fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)'}}>
-                <p>?? <strong>Tips:</strong></p>
+                <p>💡 <strong>Tips:</strong></p>
                 <ul style={{margin: '8px 0', paddingLeft: '20px'}}>
                   <li>Be specific about colors, lighting, and mood</li>
                   <li>Mention art styles like "oil painting", "watercolor", "digital art"</li>
@@ -1091,7 +1091,7 @@ export default function App() {
         }}>
           <div className="previewContent">
             <div className="previewHeader">
-              <h2 className="previewTitle">?? Foto Anda!</h2>
+              <h2 className="previewTitle">📸 Foto Anda!</h2>
               <p className="previewSubtitle">Bagaimana hasilnya? Pilih aksi selanjutnya</p>
             </div>
             
@@ -1182,7 +1182,7 @@ export default function App() {
             {/* Mode Selector Overlay di dalam Camera */}
             <div className="cameraModeSelector">
               <div className="cameraModeHeader">
-                <h3 className="cameraModeTitle">?? Pilih Mode Foto</h3>
+                <h3 className="cameraModeTitle">🎨 Pilih Mode Foto</h3>
                 <button 
                   className="cameraModeToggle"
                   onClick={(e) => {
@@ -1212,7 +1212,7 @@ export default function App() {
                       setShowCustomPrompt(true)
                     }}
                   >
-                    <span>??</span> 
+                    <span>✨</span> 
                     <p>Custom</p>
                   </button>
                   {Object.entries(modes).map(([key, {name, emoji, prompt}]) => (
@@ -1254,13 +1254,13 @@ export default function App() {
         {!videoActive && (
           <button className="startButton" onClick={startVideo} disabled={isLoading}>
             <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px'}}>
-              <span style={{fontSize: '2rem'}}>??</span>
+              <span style={{fontSize: '2rem'}}>📸</span>
               <h1>Mari Berfoto!</h1>
             </div>
             <p>
-              {isLoading ? '?? Siapkan gaya Anda...' : 
-               didInitVideo ? '? Tunggu sebentar...' : 
-               'Klik untuk mulai berfoto! ??'}
+              {isLoading ? '✨ Siapkan gaya Anda...' : 
+               didInitVideo ? '⌛ Tunggu sebentar...' : 
+               'Klik untuk mulai berfoto! 📸'}
             </p>
             
             {cameraError && (
@@ -1273,7 +1273,7 @@ export default function App() {
                 color: '#fca5a5',
                 fontSize: '14px'
               }}>
-                <p style={{margin: 0, fontWeight: '600'}}>? Error Kamera</p>
+                <p style={{margin: 0, fontWeight: '600'}}>⚠️ Error Kamera</p>
                 <p style={{margin: '4px 0 0 0', fontSize: '12px'}}>{cameraError}</p>
                 <button 
                   onClick={(e) => {
@@ -1351,7 +1351,7 @@ export default function App() {
               onClick={() => setShowMobileModeSelector(!showMobileModeSelector)}
             >
               <span className="icon">palette</span>
-              <span>?? {modes[activeMode]?.name || 'Custom'}</span>
+              <span>🎨 {modes[activeMode]?.name || 'Custom'}</span>
               <span className="icon">{showMobileModeSelector ? 'expand_less' : 'expand_more'}</span>
             </button>
             
@@ -1374,7 +1374,7 @@ export default function App() {
                       setShowMobileModeSelector(false)
                     }}
                   >
-                    <span>??</span> 
+                    <span>✨</span> 
                     <span>Custom</span>
                   </button>
                   {Object.entries(modes).map(([key, {name, emoji, prompt}]) => (
@@ -1559,7 +1559,7 @@ export default function App() {
         }}>
           <div className="desktopModeContent">
             <div className="desktopModeHeader">
-              <h2 className="desktopModeTitle">?? Pilih Mode Foto</h2>
+              <h2 className="desktopModeTitle">🎨 Pilih Mode Foto</h2>
             </div>
             
             <div className="desktopModeGrid">
@@ -1576,7 +1576,7 @@ export default function App() {
                   setShowDesktopModeSelector(false)
                 }}
               >
-                <span>??</span> 
+                <span>✨</span> 
                 <p>Custom</p>
               </button>
               {Object.entries(modes).map(([key, {name, emoji, prompt}]) => (
@@ -1610,7 +1610,7 @@ export default function App() {
         >
           {hoveredMode.key === 'custom' && !hoveredMode.prompt.length ? (
             <div style={{textAlign: 'center'}}>
-              <p style={{marginBottom: '8px'}}>?? Click to set a custom prompt</p>
+              <p style={{marginBottom: '8px'}}>💡 Click to set a custom prompt</p>
               <p style={{fontSize: '11px', opacity: 0.7}}>Create your own AI art style</p>
             </div>
           ) : (

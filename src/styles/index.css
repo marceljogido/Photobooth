@@ -2011,7 +2011,7 @@ main .canvasSection:first-child {
 .previewWatermark {
   bottom: clamp(10px, 4%, 18px);
   right: clamp(10px, 4%, 18px);
-  width: clamp(110px, 35%, 190px);
+  width: clamp(60px, 28%, 170px);
   opacity: 0.82;
 }
 
@@ -4850,15 +4850,18 @@ main .canvasSection:first-child {
 
 .photoPreview {
   position: relative;
-  width: 100%;
-  max-width: 400px;
+  display: inline-block;
   margin-bottom: 30px;
+  max-width: min(82vw, 520px);
+  width: auto;
 }
 
 .previewImage {
-  width: 100%;
-  height: 400px;
-  object-fit: contain;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: min(82vw, 520px);
+  max-height: min(72vh, 520px);
   border-radius: 15px;
   border: 2px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
@@ -5425,8 +5428,13 @@ main .canvasSection:first-child {
     margin: 10px;
   }
   
+  .photoPreview {
+    max-width: min(90vw, 420px);
+  }
+
   .previewImage {
-    height: 300px;
+    max-width: min(90vw, 420px);
+    max-height: min(65vh, 360px);
   }
   
   .previewActions {
