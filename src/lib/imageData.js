@@ -4,5 +4,6 @@
 */
 export default {
   inputs: {},
-  outputs: {}
+  outputs: {},
+  meta: {}
 }

@@ -34,6 +34,26 @@ const RESULT_TAB_OPTIONS = [
 const PORTRAIT_ASPECT = 9 / 16
 const LANDSCAPE_ASPECT = 16 / 9
 const FORCE_PORTRAIT_CAPTURE = false
+const DESKTOP_BREAKPOINT = 1024
+
+const resolveViewportOrientation = () => {
+  if (FORCE_PORTRAIT_CAPTURE) return 'portrait'
+  if (typeof window === 'undefined') return 'landscape'
+  const {innerWidth, innerHeight} = window
+  if (innerWidth >= DESKTOP_BREAKPOINT) {
+    return 'landscape'
+  }
+  if (typeof window.matchMedia === 'function') {
+    try {
+      if (window.matchMedia('(orientation: portrait)').matches) {
+        return 'portrait'
+      }
+    } catch (error) {
+      // matchMedia can throw on unsupported environments; ignore gracefully
+    }
+  }
+  return innerHeight >= innerWidth ? 'portrait' : 'landscape'
+}
 
 const ensurePositive = (value, fallback) =>
   Number.isFinite(value) && value > 0 ? value : fallback
@@ -187,6 +207,7 @@ export default function App() {
   const [showPreview, setShowPreview] = useState(false)
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false)
   const [lastPhoto, setLastPhoto] = useState(null)
+  const [lastPhotoMeta, setLastPhotoMeta] = useState(null)
   const [qrCodes, setQrCodes] = useState({photo: null, gif: null})
   const [isUploading, setIsUploading] = useState(false)
   const [showDownloadModal, setShowDownloadModal] = useState(false)
@@ -197,18 +218,16 @@ export default function App() {
   const [showDesktopModeSelector, setShowDesktopModeSelector] = useState(false)
   const [activeResultTab, setActiveResultTab] = useState('ai')
   const [isMobileResults, setIsMobileResults] = useState(false)
+  const initialOrientation = resolveViewportOrientation()
   const [cameraAspectRatio, setCameraAspectRatio] = useState(
-    FORCE_PORTRAIT_CAPTURE ? PORTRAIT_ASPECT : LANDSCAPE_ASPECT
+    initialOrientation === 'portrait' ? PORTRAIT_ASPECT : LANDSCAPE_ASPECT
   )
   const [shouldRotateVideo, setShouldRotateVideo] = useState(false)
-  const [isPortraitCapture, setIsPortraitCapture] = useState(FORCE_PORTRAIT_CAPTURE)
+  const [isPortraitCapture, setIsPortraitCapture] = useState(initialOrientation === 'portrait')
   const [cloudUrls, setCloudUrls] = useState({}) // Store cloud URLs for photos
   const [watermarkedOutputs, setWatermarkedOutputs] = useState({})
   const [preparedDownloads, setPreparedDownloads] = useState({})
-  const [isViewportPortrait, setIsViewportPortrait] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return window.innerHeight >= window.innerWidth
-  })
+  const [isViewportPortrait, setIsViewportPortrait] = useState(initialOrientation === 'portrait')
   const watermarkedOutputsRef = useRef({})
   const uploadTokenRef = useRef(0)
   useEffect(() => {
@@ -217,7 +236,7 @@ export default function App() {
   useEffect(() => {
     const updateOrientation = () => {
       if (typeof window === 'undefined') return
-      setIsViewportPortrait(window.innerHeight >= window.innerWidth)
+      setIsViewportPortrait(resolveViewportOrientation() === 'portrait')
     }
     updateOrientation()
     window.addEventListener('resize', updateOrientation)
@@ -230,11 +249,19 @@ export default function App() {
   const cameraStyle = useMemo(() => {
     const aspect = cameraAspectRatio > 0 ? cameraAspectRatio : 1
     const treatAsPortrait = aspect < 1 || isViewportPortrait || isPortraitCapture
+    const widthValue = treatAsPortrait
+      ? 'var(--camera-mobile-width, min(88vw, 420px))'
+      : 'min(90vw, 1080px)'
+    const maxHeightValue = treatAsPortrait
+      ? 'var(--camera-mobile-max-height, auto)'
+      : 'min(80vh, 608px)'
     return {
       aspectRatio: aspect,
-      width: treatAsPortrait ? 'min(85vw, 560px)' : 'min(90vw, 900px)',
-      maxHeight: treatAsPortrait ? 'min(92vh, 960px)' : '90vh',
-      margin: '0 auto'
+      width: widthValue,
+      maxWidth: '100%',
+      height: 'auto',
+      maxHeight: maxHeightValue,
+      margin: 'var(--camera-margin, 0 auto)'
     }
   }, [cameraAspectRatio, isViewportPortrait, isPortraitCapture])
   
@@ -348,11 +375,10 @@ export default function App() {
         throw new Error('getUserMedia tidak didukung di browser ini')
       }
       
-      const orientationQuery = window.matchMedia('(orientation: portrait)')
-      const isPortraitPreferred = orientationQuery.matches
-      const viewportPortrait = window.innerHeight >= window.innerWidth
-      const portraitDesired = FORCE_PORTRAIT_CAPTURE || isPortraitPreferred || viewportPortrait
-      const preferredAspect = portraitDesired ? 9 / 16 : 16 / 9
+      const desiredOrientation = resolveViewportOrientation()
+      const portraitDesired = desiredOrientation === 'portrait'
+      setIsViewportPortrait(portraitDesired)
+      const preferredAspect = portraitDesired ? PORTRAIT_ASPECT : LANDSCAPE_ASPECT
       const highResConstraints = {
         audio: false,
         video: {
@@ -362,7 +388,7 @@ export default function App() {
           facingMode: {ideal: 'user'}
         }
       }
-      const mediumResConstraints = {
+        const mediumResConstraints = {
         audio: false,
         video: {
           width: {ideal: portraitDesired ? 720 : 1280},
@@ -488,6 +514,7 @@ export default function App() {
     canvas.width = Math.max(1, Math.round(canvasWidth))
     canvas.height = Math.max(1, Math.round(canvasHeight))
     setIsLoading(true)
+    setLastPhotoMeta(null)
     
     try {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -524,6 +551,18 @@ export default function App() {
       }
       ctx.restore()
       
+      const aspect =
+        canvas.height > 0
+          ? canvas.width / canvas.height
+          : isPortraitCapture
+            ? PORTRAIT_ASPECT
+            : LANDSCAPE_ASPECT
+      setLastPhotoMeta({
+        width: canvas.width,
+        height: canvas.height,
+        aspect,
+        orientation: canvas.height >= canvas.width ? 'portrait' : 'landscape'
+      })
       const photoData = canvas.toDataURL('image/jpeg', 0.95)
       setLastPhoto(photoData)
       setCurrentPhotoId(null)
@@ -655,6 +694,7 @@ export default function App() {
     setPreparedDownloads({})
     setFocusedId(null)
     setLastPhoto(null)
+    setLastPhotoMeta(null)
     setDidJustSnap(false)
     setCountdown(0)
     setIsUploading(false)
@@ -843,12 +883,16 @@ export default function App() {
       alert('? Foto tidak tersedia. Silakan ambil foto terlebih dahulu.')
       return
     }
+    if (!lastPhotoMeta) {
+      alert('? Data foto belum lengkap. Silakan ambil foto terlebih dahulu.')
+      return
+    }
 
     setIsProcessingPhoto(true)
     setShowPreview(false)
 
     try {
-      const photoId = await snapPhoto(lastPhoto)
+      const photoId = await snapPhoto(lastPhoto, lastPhotoMeta)
       if (photoId) {
         setCurrentPhotoId(photoId)
         setCurrentPage('results')

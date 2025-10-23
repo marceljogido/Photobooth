@@ -10,8 +10,9 @@ import modes from './modes'
 
 const get = useStore.getState
 const set = useStore.setState
-const gifSize = 512
+const GIF_MAX_LONG_SIDE = 720
 const WATERMARK_SOURCE = '/logowatermark.png'
+const DEFAULT_CANVAS_BACKGROUND = '#0b1120'
 
 const loadImage = src =>
   new Promise((resolve, reject) => {
@@ -36,7 +37,108 @@ const getWatermarkImage = async () => {
   }
   return watermarkImagePromise
 }
-const model = 'gemini-2.0-flash-preview-image-generation'
+const buildMetaFromDimensions = (width, height) => {
+  const safeWidth = Math.max(1, Math.round(width || 0))
+  const safeHeight = Math.max(1, Math.round(height || 0))
+  const aspect = safeWidth / safeHeight
+  return {
+    width: safeWidth,
+    height: safeHeight,
+    aspect,
+    orientation: safeHeight >= safeWidth ? 'portrait' : 'landscape'
+  }
+}
+
+const normalizeMeta = meta => {
+  if (!meta) return null
+  const {width, height} = meta
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+    return null
+  }
+  return buildMetaFromDimensions(width, height)
+}
+
+const renderImageToCanvas = async (
+  image,
+  width,
+  height,
+  {withWatermark = false, background = DEFAULT_CANVAS_BACKGROUND} = {}
+) => {
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.max(1, Math.round(width))
+  canvas.height = Math.max(1, Math.round(height))
+  const ctx = canvas.getContext('2d')
+  ctx.fillStyle = background
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  const sourceWidth = Math.max(1, image.width || 1)
+  const sourceHeight = Math.max(1, image.height || 1)
+  const scale = Math.min(canvas.width / sourceWidth, canvas.height / sourceHeight)
+  const drawWidth = sourceWidth * scale
+  const drawHeight = sourceHeight * scale
+  const offsetX = (canvas.width - drawWidth) / 2
+  const offsetY = (canvas.height - drawHeight) / 2
+  ctx.drawImage(image, offsetX, offsetY, drawWidth, drawHeight)
+
+  if (withWatermark) {
+    try {
+      const watermark = await getWatermarkImage()
+      if (watermark && watermark.width && watermark.height) {
+        const base = Math.min(canvas.width, canvas.height)
+        const desiredWidth = base * 0.22
+        const aspect = watermark.width / watermark.height
+        const desiredHeight = desiredWidth / aspect
+        const margin = Math.max(10, Math.round(base * 0.04))
+        const x = canvas.width - desiredWidth - margin
+        const y = canvas.height - desiredHeight - margin
+        ctx.drawImage(watermark, x, y, desiredWidth, desiredHeight)
+      }
+    } catch (error) {
+      console.warn('Failed to apply watermark:', error)
+    }
+  }
+
+  return {canvas, ctx}
+}
+
+const loadAndRenderImage = async (base64Data, width, height, options = {}) => {
+  const image = await loadImage(base64Data)
+  const rendered = await renderImageToCanvas(image, width, height, options)
+  return {...rendered, image}
+}
+
+const ensureOutputMatchesMeta = async (base64Data, targetMeta) => {
+  let image
+  try {
+    image = await loadImage(base64Data)
+  } catch (error) {
+    console.warn('Unable to load AI output for normalization:', error)
+    const fallbackMeta =
+      normalizeMeta(targetMeta) || buildMetaFromDimensions(1, 1)
+    return {dataUrl: base64Data, meta: fallbackMeta}
+  }
+
+  const desiredMeta =
+    normalizeMeta(targetMeta) ||
+    buildMetaFromDimensions(image.width || 1, image.height || 1)
+
+  if (
+    image.width === desiredMeta.width &&
+    image.height === desiredMeta.height
+  ) {
+    return {dataUrl: base64Data, meta: desiredMeta}
+  }
+
+  const {canvas} = await renderImageToCanvas(image, desiredMeta.width, desiredMeta.height, {
+    background: DEFAULT_CANVAS_BACKGROUND
+  })
+
+  return {
+    dataUrl: canvas.toDataURL('image/png'),
+    meta: desiredMeta
+  }
+}
+const model = 'gemini-2.5-flash-image'
 
 export const init = () => {
   if (get().didInit) {
@@ -49,10 +151,12 @@ export const init = () => {
 }
 
 // ...existing code...
-export const snapPhoto = async b64 => {
+export const snapPhoto = async (b64, meta) => {
   const id = crypto.randomUUID()
   const {activeMode, customPrompt} = get()
   imageData.inputs[id] = b64
+  const normalizedInputMeta = normalizeMeta(meta)
+  imageData.meta[id] = normalizedInputMeta ? {input: normalizedInputMeta} : {}
 
   set(state => {
     state.photos.unshift({id, mode: activeMode, isBusy: true})
@@ -64,8 +168,14 @@ export const snapPhoto = async b64 => {
       prompt: activeMode === 'custom' ? customPrompt : modes[activeMode].prompt,
       inputFile: b64
     })
-    
-    imageData.outputs[id] = result
+    const normalizedOutput = await ensureOutputMatchesMeta(result, normalizedInputMeta)
+    const existingMeta = imageData.meta[id] || {}
+
+    imageData.outputs[id] = normalizedOutput.dataUrl
+    imageData.meta[id] = {
+      input: existingMeta.input || normalizedInputMeta || normalizedOutput.meta,
+      output: normalizedOutput.meta
+    }
 
     set(state => {
       state.photos = state.photos.map(photo =>
@@ -94,6 +204,7 @@ export const deletePhoto = id => {
 
   delete imageData.inputs[id]
   delete imageData.outputs[id]
+  delete imageData.meta[id]
 }
 
 export const setMode = mode =>
@@ -101,67 +212,24 @@ export const setMode = mode =>
     state.activeMode = mode
   })
 
-const processImageToCanvas = async (base64Data, size, withWatermark = false) => {
-  const img = new Image()
-  await new Promise((resolve, reject) => {
-    img.onload = resolve
-    img.onerror = reject
-    img.src = base64Data
+const processImageToCanvas = async (
+  base64Data,
+  width,
+  height,
+  {withWatermark = false, background = DEFAULT_CANVAS_BACKGROUND} = {}
+) => {
+  const {ctx, canvas} = await loadAndRenderImage(base64Data, width, height, {
+    withWatermark,
+    background
   })
-
-  const canvas = document.createElement('canvas')
-  const ctx = canvas.getContext('2d')
-  canvas.width = size
-  canvas.height = size
-
-  const imgAspect = img.width / img.height
-  const canvasAspect = 1
-
-  let drawWidth
-  let drawHeight
-  let drawX
-  let drawY
-
-  if (imgAspect > canvasAspect) {
-    drawHeight = size
-    drawWidth = drawHeight * imgAspect
-    drawX = (size - drawWidth) / 2
-    drawY = 0
-  } else {
-    drawWidth = size
-    drawHeight = drawWidth / imgAspect
-    drawX = 0
-    drawY = (size - drawHeight) / 2
-  }
-
-  ctx.clearRect(0, 0, size, size)
-  ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight)
-
-  if (withWatermark) {
-    try {
-      const watermark = await getWatermarkImage()
-      if (watermark && watermark.width && watermark.height) {
-        const desiredWidth = size * 0.2
-        const aspect = watermark.width / watermark.height
-        const desiredHeight = desiredWidth / aspect
-        const margin = Math.max(10, Math.round(size * 0.04))
-        const x = size - desiredWidth - margin
-        const y = size - desiredHeight - margin
-        ctx.drawImage(watermark, x, y, desiredWidth, desiredHeight)
-      }
-    } catch (error) {
-      console.warn('Failed to apply watermark to GIF frame:', error)
-    }
-  }
-
-  return ctx.getImageData(0, 0, size, size)
+  return ctx.getImageData(0, 0, canvas.width, canvas.height)
 }
 
-const addFrameToGif = (gif, imageData, size, delay) => {
+const addFrameToGif = (gif, imageData, width, height, delay) => {
   const palette = quantize(imageData.data, 256)
   const indexed = applyPalette(imageData.data, palette)
 
-  gif.writeFrame(indexed, size, size, {
+  gif.writeFrame(indexed, width, height, {
     palette,
     delay
   })
@@ -194,11 +262,38 @@ export const makeGif = async () => {
       return null
     }
 
-    const inputImageData = await processImageToCanvas(inputBase64, gifSize, true)
-    addFrameToGif(gif, inputImageData, gifSize, 333)
+    const baseMeta =
+      imageData.meta[latestId]?.output ||
+      imageData.meta[latestId]?.input ||
+      buildMetaFromDimensions(GIF_MAX_LONG_SIDE, GIF_MAX_LONG_SIDE)
+    const longestSide = Math.max(baseMeta.width, baseMeta.height)
+    const scale =
+      longestSide > GIF_MAX_LONG_SIDE
+        ? GIF_MAX_LONG_SIDE / longestSide
+        : 1
+    const frameWidth = Math.max(1, Math.round(baseMeta.width * scale))
+    const frameHeight = Math.max(1, Math.round(baseMeta.height * scale))
 
-    const outputImageData = await processImageToCanvas(outputBase64, gifSize, true)
-    addFrameToGif(gif, outputImageData, gifSize, 833)
+    imageData.meta[latestId] = {
+      ...(imageData.meta[latestId] || {}),
+      gif: buildMetaFromDimensions(frameWidth, frameHeight)
+    }
+
+    const inputImageData = await processImageToCanvas(
+      inputBase64,
+      frameWidth,
+      frameHeight,
+      {withWatermark: true}
+    )
+    addFrameToGif(gif, inputImageData, frameWidth, frameHeight, 333)
+
+    const outputImageData = await processImageToCanvas(
+      outputBase64,
+      frameWidth,
+      frameHeight,
+      {withWatermark: true}
+    )
+    addFrameToGif(gif, outputImageData, frameWidth, frameHeight, 833)
 
     gif.finish()
 
@@ -223,6 +318,11 @@ export const makeGif = async () => {
     Object.keys(imageData.outputs).forEach(key => {
       if (key !== latestId) {
         delete imageData.outputs[key]
+      }
+    })
+    Object.keys(imageData.meta).forEach(key => {
+      if (key !== latestId) {
+        delete imageData.meta[key]
       }
     })
 
@@ -251,6 +351,9 @@ export const resetSession = () => {
   })
   Object.keys(imageData.outputs).forEach(key => {
     delete imageData.outputs[key]
+  })
+  Object.keys(imageData.meta).forEach(key => {
+    delete imageData.meta[key]
   })
 
   if (gifUrl && typeof gifUrl === 'string' && gifUrl.startsWith('blob:')) {

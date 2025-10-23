@@ -1828,7 +1828,7 @@ main .canvasSection:first-child {
   padding: 0;
   gap: 0;
   width: 100%;
-  max-width: 1000px;
+  max-width: 1080px;
 }
 
 .cameraModeSelector {
@@ -2033,8 +2033,12 @@ main .canvasSection:first-child {
 @media (max-width: 768px) {
   .camera video {
     display: block;
-    width: 100%;
-    height: 100%;
+    width: clamp(260px, 85vw, 1080px) !important;
+    height: clamp(360px, 80vh, 1920px) !important;
+    max-width: none !important;
+    max-height: none !important;
+    width: 100% !important;
+    height: 100% !important;
     object-fit: cover !important;
     transition: all 0.3s ease;
     transform: rotateY(180deg);
@@ -2856,12 +2860,10 @@ main .canvasSection:first-child {
   }
 
   .camera {
-    width: 100%;
-    max-width: 400px;
-    height: 400px;
-    min-height: 300px;
-    max-height: 500px;
-    flex: none;
+    width: clamp(260px, 85vw, 420px);
+    height: clamp(360px, 80vh, 620px);
+    max-width: none;
+    max-height: none;
   }
 }
 
@@ -3652,22 +3654,18 @@ main .canvasSection:first-child {
   /* Canvas sections now use flexbox */
   
   .camera {
-    height: calc(100vh - 60px) !important;
-    width: calc(100vw - 20px) !important;
-    margin: 0 10px !important;
-    padding: 0 !important;
-    border-radius: 12px !important;
+    width: clamp(260px, 90vw, 520px);
+    height: clamp(380px, 86vh, 720px);
+    margin: clamp(8px, 3vh, 20px) auto;
+    padding: 0;
+    border-radius: 16px;
     background: linear-gradient(135deg, rgba(207, 250, 254, 0.95) 0%, rgba(134, 239, 172, 0.95) 50%, rgba(56, 189, 248, 0.95) 100%);
     position: relative;
     overflow: hidden;
     display: flex;
     align-items: center;
-  text-align: center;
     justify-content: center;
-    /* Portrait orientation for mobile */
-    aspect-ratio: 3/4 !important;
-    max-width: calc(100vw - 20px) !important;
-    max-height: calc(100vh - 60px) !important;
+    aspect-ratio: 3 / 4;
   }
   
   .modeSelectorCanvas {
@@ -4740,7 +4738,7 @@ main .canvasSection:first-child {
   .camera {
     padding: 0;
     gap: 0;
-    width: 100%;
+    width: auto !important;
     height: auto;
     min-height: 0;
     max-height: none;
@@ -4749,6 +4747,11 @@ main .canvasSection:first-child {
   .camera video {
     width: 100%;
     height: 100%;
+    object-fit: cover !important;
+  }
+  
+  .modeSelectorCanvas {
+    grid-template-columns:
   }
   
   .startButton h1 {
@@ -5534,11 +5537,11 @@ main .canvasSection:first-child {
 }
 
 .photoResult .photoSide img {
-  width: 100%;
-  max-width: min(100%, 420px);
-  height: auto;
-  max-height: min(75vh, 720px);
-  aspect-ratio: 9 / 16;
+  width: 100% !important;
+  max-width: min(100%, 640px) !important;
+  height: auto !important;
+  max-height: min(88vh, 960px) !important;
+  aspect-ratio: auto !important;
   object-fit: contain !important;
   background: rgba(0, 0, 0, 0.2);
   border-radius: 15px;
@@ -5568,9 +5571,9 @@ main .canvasSection:first-child {
 
 .photoResult .loadingPlaceholder {
   width: 100%;
-  max-width: min(100%, 420px);
-  max-height: min(75vh, 720px);
-  aspect-ratio: 9 / 16;
+  max-width: min(100%, 640px);
+  max-height: min(88vh, 960px);
+  aspect-ratio: auto;
   background: rgba(255, 255, 255, 0.05);
   border: 2px dashed rgba(255, 255, 255, 0.3);
   border-radius: 15px;
@@ -5674,10 +5677,10 @@ main .canvasSection:first-child {
   .photoComparison.isMobileResults {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 5px !important;
     align-items: stretch;
-    margin-top: 20px;
-    margin-bottom: -30px !important;
+    margin-top: 1px;
+    margin-bottom: 5px !important;
   }
   
   .resultTabs {
@@ -5754,41 +5757,23 @@ main .canvasSection:first-child {
     gap: 18px;
     text-align: center;
   }
-  
-  .resultPanel .photoSide {
-    width: 100%;
-    max-width: 100%;
-    gap: 16px;
-  }
-  
-  .resultPanel .photoSide img {
-    width: 100%;
-    max-width: 100%;
-    height: auto;
-    max-height: min(75vh, 540px);
-    aspect-ratio: auto;
-  }
-  
-  .resultPanel .loadingPlaceholder {
-    width: 100%;
-    max-width: 100%;
-    height: min(75vh, 540px);
-    aspect-ratio: auto;
-  }
-  
-  .photoResult .photoSide img {
-    width: 100%;
-    max-width: 100%;
-    height: auto;
-    max-height: min(75vh, 540px);
-    aspect-ratio: auto;
-  }
-  
-  .photoResult .loadingPlaceholder {
-    max-width: 100%;
-    height: min(75vh, 540px);
-    aspect-ratio: auto;
-  }
+
+.resultPanel .photoSide img,
+.resultPanel .loadingPlaceholder,
+.photoResult .photoSide img,
+.photoResult .loadingPlaceholder {
+  max-height: min(70vh, 560px);
+  max-width: min(100%, 640px);
+  width: 100% !important;
+  height: clamp(300px, 80vh, 880px) !important;
+  aspect-ratio: auto !important;
+  object-fit: contain !important;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
   
   .resultActions,
   .resultsActions {
