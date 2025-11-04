@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @license
  * SPDX-License-Identifier: Apache-2.0
 */
@@ -228,33 +228,63 @@ export default function App() {
   const [watermarkedOutputs, setWatermarkedOutputs] = useState({})
   const [preparedDownloads, setPreparedDownloads] = useState({})
   const [isViewportPortrait, setIsViewportPortrait] = useState(initialOrientation === 'portrait')
+  const [viewportSize, setViewportSize] = useState(() => ({
+    width: typeof window !== 'undefined' ? window.innerWidth : 0,
+    height: typeof window !== 'undefined' ? window.innerHeight : 0
+  }))
   const watermarkedOutputsRef = useRef({})
   const uploadTokenRef = useRef(0)
   useEffect(() => {
     watermarkedOutputsRef.current = watermarkedOutputs
   }, [watermarkedOutputs])
   useEffect(() => {
-    const updateOrientation = () => {
+    const updateViewport = () => {
       if (typeof window === 'undefined') return
       setIsViewportPortrait(resolveViewportOrientation() === 'portrait')
+      setViewportSize({width: window.innerWidth, height: window.innerHeight})
     }
-    updateOrientation()
-    window.addEventListener('resize', updateOrientation)
-    window.addEventListener('orientationchange', updateOrientation)
+    updateViewport()
+    window.addEventListener('resize', updateViewport)
+    window.addEventListener('orientationchange', updateViewport)
     return () => {
-      window.removeEventListener('resize', updateOrientation)
-      window.removeEventListener('orientationchange', updateOrientation)
+      window.removeEventListener('resize', updateViewport)
+      window.removeEventListener('orientationchange', updateViewport)
     }
   }, [])
   const cameraStyle = useMemo(() => {
     const aspect = cameraAspectRatio > 0 ? cameraAspectRatio : 1
     const treatAsPortrait = aspect < 1 || isViewportPortrait || isPortraitCapture
-    const widthValue = treatAsPortrait
-      ? 'var(--camera-mobile-width, min(88vw, 420px))'
-      : 'min(90vw, 1080px)'
-    const maxHeightValue = treatAsPortrait
-      ? 'var(--camera-mobile-max-height, auto)'
-      : 'min(80vh, 608px)'
+    const viewportHeight = viewportSize.height || 0
+    const headerHeight = isViewportPortrait ? 78 : 84
+    const verticalPadding = isViewportPortrait ? 36 : 48
+    const availableHeight =
+      viewportHeight > 0 ? Math.max(0, viewportHeight - headerHeight - verticalPadding) : null
+
+    let widthValue
+    let maxHeightValue
+
+    if (treatAsPortrait) {
+      if (availableHeight && availableHeight > 0) {
+        const widthFromHeight = availableHeight * aspect
+        const maxWidthPx = widthFromHeight > 0 ? Math.min(widthFromHeight, 420) : 0
+        widthValue =
+          maxWidthPx > 0
+            ? `min(88vw, ${Math.round(maxWidthPx)}px)`
+            : 'var(--camera-mobile-width, min(88vw, 420px))'
+        maxHeightValue = `${Math.round(Math.min(availableHeight, 720))}px`
+      } else {
+        widthValue = 'var(--camera-mobile-width, min(88vw, 420px))'
+        maxHeightValue = 'var(--camera-mobile-max-height, auto)'
+      }
+    } else {
+      widthValue = 'min(90vw, 1080px)'
+      if (availableHeight && availableHeight > 0) {
+        maxHeightValue = `${Math.round(Math.min(availableHeight, 608))}px`
+      } else {
+        maxHeightValue = 'min(80vh, 608px)'
+      }
+    }
+
     return {
       aspectRatio: aspect,
       width: widthValue,
@@ -263,7 +293,12 @@ export default function App() {
       maxHeight: maxHeightValue,
       margin: 'var(--camera-margin, 0 auto)'
     }
-  }, [cameraAspectRatio, isViewportPortrait, isPortraitCapture])
+  }, [
+    cameraAspectRatio,
+    isViewportPortrait,
+    isPortraitCapture,
+    viewportSize.height
+  ])
   
   useEffect(() => {
     if (photos.length === 0) {
@@ -477,6 +512,15 @@ export default function App() {
       setCameraError(errorMessage)
     }
   }
+  const handleOverlayActivate = useCallback(
+    event => {
+      if (event?.preventDefault) event.preventDefault()
+      if (event?.stopPropagation) event.stopPropagation()
+      if (isLoading) return
+      startVideo()
+    },
+    [isLoading, startVideo]
+  )
   const startCountdown = () => {
     if (isLoading || countdown > 0) return
     
@@ -1179,124 +1223,118 @@ export default function App() {
               setFocusedId(null)
             }}
           >
-            {/* Mode Selector Overlay di dalam Camera */}
-            <div className="cameraModeSelector">
-              <div className="cameraModeHeader">
-                <h3 className="cameraModeTitle">🎨 Pilih Mode Foto</h3>
-                <button 
-                  className="cameraModeToggle"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setShowDesktopModeSelector(!showDesktopModeSelector)
-                  }}
-                >
-                  <span className="icon">palette</span>
-                  <span>{modes[activeMode]?.name || 'Custom'}</span>
-                  <span className="icon">{showDesktopModeSelector ? 'expand_less' : 'expand_more'}</span>
-                </button>
-              </div>
-              
-              {/* Mode Grid - Always Visible */}
-              {showDesktopModeSelector && (
-                <div className="cameraModeGrid">
+            {videoActive && (
+              <div className="cameraModeSelector">
+                <div className="cameraModeHeader">
+                  <h3 className="cameraModeTitle">🎨 Pilih Mode Foto</h3>
                   <button
-                    key="custom"
-                    className={c('cameraModeButton', {active: activeMode === 'custom'})}
-                    onMouseEnter={e =>
-                      handleModeHover({key: 'custom', prompt: customPrompt}, e)
-                    }
-                    onMouseLeave={() => handleModeHover(null)}
-                    onClick={(e) => {
+                    className="cameraModeToggle"
+                    onClick={e => {
                       e.stopPropagation()
-                      setMode('custom')
-                      setShowCustomPrompt(true)
+                      setShowDesktopModeSelector(!showDesktopModeSelector)
                     }}
                   >
-                    <span>✨</span> 
-                    <p>Custom</p>
+                    <span className="icon">palette</span>
+                    <span>{modes[activeMode]?.name || 'Custom'}</span>
+                    <span className="icon">
+                      {showDesktopModeSelector ? 'expand_less' : 'expand_more'}
+                    </span>
                   </button>
-                  {Object.entries(modes).map(([key, {name, emoji, prompt}]) => (
+                </div>
+
+                {showDesktopModeSelector && (
+                  <div className="cameraModeGrid">
                     <button
-                      key={key}
-                      className={c('cameraModeButton', {active: key === activeMode})}
-                      onMouseEnter={e => handleModeHover({key, prompt}, e)}
+                      key="custom"
+                      className={c('cameraModeButton', {active: activeMode === 'custom'})}
+                      onMouseEnter={e =>
+                        handleModeHover({key: 'custom', prompt: customPrompt}, e)
+                      }
                       onMouseLeave={() => handleModeHover(null)}
-                      onClick={(e) => {
+                      onClick={e => {
                         e.stopPropagation()
-                        setMode(key)
+                        setMode('custom')
+                        setShowCustomPrompt(true)
                       }}
                     >
-                      <span>{emoji}</span> 
-                      <p>{name}</p>
+                      <span>✨</span>
+                      <p>Custom</p>
                     </button>
-                  ))}
-                </div>
-              )}
-            </div>
-        <div className={c('cameraPreview', {portraitMode: shouldRotateVideo})}>
-          <video
-            ref={videoRef}
-            muted
-            autoPlay
-            playsInline
-            disablePictureInPicture={true}
-          />
-          {videoActive && (
-            <img
-              src={WATERMARK_OVERLAY_SRC}
-              alt=""
-              className="watermarkOverlay cameraWatermark"
-              aria-hidden="true"
-            />
-          )}
-          {didJustSnap && <div className="flash" />}
-        </div>
-        {!videoActive && (
-          <button className="startButton" onClick={startVideo} disabled={isLoading}>
-            <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px'}}>
-              <span style={{fontSize: '2rem'}}>📸</span>
-              <h1>Mari Berfoto!</h1>
-            </div>
-            <p>
-              {isLoading ? '✨ Siapkan gaya Anda...' : 
-               didInitVideo ? '⌛ Tunggu sebentar...' : 
-               'Klik untuk mulai berfoto! 📸'}
-            </p>
-            
-            {cameraError && (
-              <div style={{
-                marginTop: '15px',
-                padding: '12px',
-                background: 'rgba(239, 68, 68, 0.1)',
-                border: '1px solid rgba(239, 68, 68, 0.3)',
-                borderRadius: '8px',
-                color: '#fca5a5',
-                fontSize: '14px'
-              }}>
-                <p style={{margin: 0, fontWeight: '600'}}>⚠️ Error Kamera</p>
-                <p style={{margin: '4px 0 0 0', fontSize: '12px'}}>{cameraError}</p>
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setCameraError(null)
-                    startVideo()
-                  }}
-                  style={{
-                    marginTop: '8px',
-                    padding: '6px 12px',
-                    background: 'rgba(239, 68, 68, 0.2)',
-                    border: '1px solid rgba(239, 68, 68, 0.4)',
-                    borderRadius: '4px',
-                    color: '#fff',
-                    fontSize: '12px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Coba Lagi
-                </button>
+                    {Object.entries(modes).map(([key, {name, emoji, prompt}]) => (
+                      <button
+                        key={key}
+                        className={c('cameraModeButton', {active: key === activeMode})}
+                        onMouseEnter={e => handleModeHover({key, prompt}, e)}
+                        onMouseLeave={() => handleModeHover(null)}
+                        onClick={e => {
+                          e.stopPropagation()
+                          setMode(key)
+                        }}
+                      >
+                        <span>{emoji}</span>
+                        <p>{name}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
-          </button>
+        <video
+          ref={videoRef}
+          muted
+          autoPlay
+          playsInline
+          disablePictureInPicture={true}
+          className="cameraVideo"
+        />
+        {videoActive && (
+          <img
+            src={WATERMARK_OVERLAY_SRC}
+            alt=""
+            className="watermarkOverlay cameraWatermark"
+            aria-hidden="true"
+          />
+        )}
+        {!videoActive && (
+          <div
+            className={c('cameraOverlay', {isDisabled: isLoading})}
+            role="button"
+            tabIndex={0}
+            aria-disabled={isLoading}
+            onClick={handleOverlayActivate}
+            onPointerUp={handleOverlayActivate}
+            onTouchEnd={handleOverlayActivate}
+            onKeyDown={event => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                handleOverlayActivate(event)
+              }
+            }}
+          >
+            <div className="cameraOverlayContent">
+              <div className="cameraOverlayHeading">
+                <span className="cameraOverlayIcon">📸</span>
+                <h1>Mari Berfoto!</h1>
+              </div>
+              <p className="cameraOverlaySubtitle">
+                {isLoading
+                  ? 'Sedang menyiapkan kamera...'
+                  : didInitVideo
+                  ? 'Memulai kamera, tunggu sebentar...'
+                  : 'Sentuh atau klik area ini untuk mulai berfoto.'}
+              </p>
+              {cameraError && (
+                <div className="cameraOverlayError">
+                  <p className="cameraOverlayErrorTitle">Error Kamera</p>
+                  <p className="cameraOverlayErrorMessage">{cameraError}</p>
+                </div>
+              )}
+              {/* {!isLoading && (
+                <p className="cameraOverlayHint">
+                  Klik, sentuh, atau tekan Enter/Space untuk memulai kamera
+                </p>
+              )} */}
+            </div>
+          </div>
         )}
         {videoActive && (
           <div className="videoControls">
@@ -1310,8 +1348,6 @@ export default function App() {
                 {isLoading ? 'hourglass_empty' : countdown > 0 ? countdown : 'camera'}
               </span>
             </button>
-            
-            
             {isLoading && (
               <div style={{
                 position: 'absolute',
@@ -1343,58 +1379,64 @@ export default function App() {
             )}
           </div>
         )}
-          </div>
-          {/* Mobile Mode Selector - Hidden on Desktop */}
-          <div className="mobileModeContainer">
-            <button 
-              className="mobileModeToggle"
-              onClick={() => setShowMobileModeSelector(!showMobileModeSelector)}
-            >
-              <span className="icon">palette</span>
-              <span>🎨 {modes[activeMode]?.name || 'Custom'}</span>
-              <span className="icon">{showMobileModeSelector ? 'expand_less' : 'expand_more'}</span>
-            </button>
-            
-            {/* Mobile Mode Selector Dropdown */}
-            {showMobileModeSelector && (
-              <div className="mobileModeSelector">
-                <button 
-                  className="mobileModeClose"
-                  onClick={() => setShowMobileModeSelector(false)}
-                >
-                  <span className="icon">close</span>
-                </button>
-                <div className="mobileModeGrid">
+        {didJustSnap && <div className="flash" />}
+            {videoActive && (
+              <>
+                {/* Mobile Mode Selector - Hidden on Desktop */}
+                <div className="mobileModeContainer">
                   <button
-                    key="custom"
-                    className={c('mobileModeButton', {active: activeMode === 'custom'})}
-                    onClick={() => {
-                      setMode('custom')
-                      setShowCustomPrompt(true)
-                      setShowMobileModeSelector(false)
-                    }}
+                    className="mobileModeToggle"
+                    onClick={() => setShowMobileModeSelector(!showMobileModeSelector)}
                   >
-                    <span>✨</span> 
-                    <span>Custom</span>
+                    <span className="icon">palette</span>
+                    <span>🎨 {modes[activeMode]?.name || 'Custom'}</span>
+                    <span className="icon">
+                      {showMobileModeSelector ? 'expand_less' : 'expand_more'}
+                    </span>
                   </button>
-                  {Object.entries(modes).map(([key, {name, emoji, prompt}]) => (
-                    <button
-                      key={key}
-                      className={c('mobileModeButton', {active: key === activeMode})}
-                      onClick={() => {
-                        setMode(key)
-                        setShowMobileModeSelector(false)
-                      }}
-                    >
-                      <span>{emoji}</span> 
-                      <span>{name}</span>
-                    </button>
-                  ))}
+
+                  {showMobileModeSelector && (
+                    <div className="mobileModeSelector">
+                      <button
+                        className="mobileModeClose"
+                        onClick={() => setShowMobileModeSelector(false)}
+                      >
+                        <span className="icon">close</span>
+                      </button>
+                      <div className="mobileModeGrid">
+                        <button
+                          key="custom"
+                          className={c('mobileModeButton', {active: activeMode === 'custom'})}
+                          onClick={() => {
+                            setMode('custom')
+                            setShowCustomPrompt(true)
+                            setShowMobileModeSelector(false)
+                          }}
+                        >
+                          <span>✨</span>
+                          <span>Custom</span>
+                        </button>
+                        {Object.entries(modes).map(([key, {name, emoji, prompt}]) => (
+                          <button
+                            key={key}
+                            className={c('mobileModeButton', {active: key === activeMode})}
+                            onClick={() => {
+                              setMode(key)
+                              setShowMobileModeSelector(false)
+                            }}
+                          >
+                            <span>{emoji}</span>
+                            <span>{name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
+              </>
             )}
-          </div>
-        </>
+        </div>
+      </>
       )}
       {/* Results Page */}
       {currentPage === 'results' && currentPhotoId && (

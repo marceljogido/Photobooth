@@ -53,8 +53,43 @@ ensureDir(UPLOAD_GIF_DIR)
 
 const app = express()
 const PORT = process.env.PORT || 3001
-const STORAGE_PROVIDER = (process.env.STORAGE_PROVIDER || 'nextcloud').toLowerCase()
-const isNextcloudProvider = STORAGE_PROVIDER === 'nextcloud'
+
+const parseBoolean = value => {
+  if (value === undefined || value === null) return null
+  const normalized = String(value).trim().toLowerCase()
+  if (!normalized) return null
+  if (['true', '1', 'yes', 'on'].includes(normalized)) return true
+  if (['false', '0', 'no', 'off'].includes(normalized)) return false
+  return null
+}
+
+const resolveBoolean = (value, fallback) => {
+  const parsed = parseBoolean(value)
+  return parsed === null ? fallback : parsed
+}
+
+const defaultProvider = (process.env.STORAGE_PROVIDER || 'nextcloud').toLowerCase()
+
+let enableNextcloud = resolveBoolean(process.env.ENABLE_NEXTCLOUD_STORAGE, defaultProvider === 'nextcloud')
+let enableFtp = resolveBoolean(process.env.ENABLE_FTP_STORAGE, defaultProvider === 'ftp')
+let enableLocal = resolveBoolean(process.env.ENABLE_LOCAL_STORAGE, defaultProvider === 'local')
+
+if (!enableNextcloud && !enableFtp && !enableLocal) {
+  enableLocal = true
+}
+
+const keepLocalCopy = resolveBoolean(process.env.KEEP_LOCAL_COPY, enableLocal)
+
+const activeProviders = []
+if (enableNextcloud) activeProviders.push('nextcloud')
+if (enableFtp) activeProviders.push('ftp')
+if (enableLocal) activeProviders.push('local')
+
+const primaryStorageProvider = (() => {
+  const preferred = (process.env.PRIMARY_STORAGE_PROVIDER || defaultProvider || '').toLowerCase()
+  if (preferred && activeProviders.includes(preferred)) return preferred
+  return activeProviders[0] || 'local'
+})()
 
 app.use(express.json())
 app.use(express.static(path.resolve(__dirname, '..', '..', 'dist')))
@@ -64,12 +99,9 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 })
 
-console.log(`🔧 Active storage provider: ${STORAGE_PROVIDER}`)
-if (isNextcloudProvider) {
-  console.log('🔧 Nextcloud configuration loaded from nextcloudUtils.js')
-} else {
-  console.log('🔧 FTP configuration loaded from ftpUtils.js')
-}
+console.log(`[storage] Active providers: ${activeProviders.join(', ') || 'local (auto)'}`)
+console.log(`[storage] Primary provider: ${primaryStorageProvider}`)
+console.log(`[storage] Keep local copy: ${keepLocalCopy}`)
 
 function safeUnlink(filePath, label) {
   if (!filePath) return
@@ -154,7 +186,11 @@ app.get('/health', (req, res) => {
   const ncConfig = getNextcloudConfig()
   res.json({
     status: 'ok',
-    storage_provider: STORAGE_PROVIDER,
+    storage_provider: primaryStorageProvider,
+    storage_providers: activeProviders,
+    local_storage_enabled: enableLocal,
+    keep_local_copy: keepLocalCopy,
+    ftp_enabled: enableFtp,
     ftp_configured: !!(ftpConfig.ftpAddress && ftpConfig.ftpUsername && ftpConfig.ftpPassword),
     ftp_config: {
       host: ftpConfig.ftpAddress,
@@ -162,6 +198,7 @@ app.get('/health', (req, res) => {
       path: ftpConfig.ftpPath,
       displayUrl: ftpConfig.displayUrl
     },
+    nextcloud_enabled: enableNextcloud,
     nextcloud_configured: !!(ncConfig.serverUrl && ncConfig.webdavRoot && ncConfig.username && ncConfig.password),
     nextcloud_config: {
       serverUrl: ncConfig.serverUrl,
@@ -176,14 +213,14 @@ app.get('/health', (req, res) => {
 
 // Upload endpoint (supports FTP or Nextcloud storage with watermarking)
 app.post('/api/upload', upload.single('file'), async (req, res) => {
-  console.log('📤 Upload request received')
+  console.log('[upload] Upload request received')
 
   if (!req.file) {
-    console.log('❌ No file uploaded')
+    console.log('[upload] No file uploaded')
     return res.status(400).json({ error: 'No file uploaded' })
   }
 
-  console.log('📁 File received:', {
+  console.log('[upload] File received:', {
     originalname: req.file.originalname,
     mimetype: req.file.mimetype,
     size: req.file.size
@@ -195,90 +232,181 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
   const filename = `DigiOH_PhotoBox_${timestamp}.${extension}`
   const targetDir = isGif ? UPLOAD_GIF_DIR : UPLOAD_IMG_DIR
   const localPath = path.join(targetDir, filename)
-  let watermarkedPath = null
+  let nextcloudWatermarkedPath = null
 
   try {
     ensureDir(targetDir)
     fs.writeFileSync(localPath, req.file.buffer)
 
-    console.log('📝 Using filename:', filename)
+    console.log('[upload] Using filename:', filename)
 
-    let finalUrl
-
-    if (isNextcloudProvider) {
-      console.log('☁️ Using Nextcloud storage provider')
-
-      if (isGif) {
-        console.log('🎞️ Uploading GIF to Nextcloud (no watermark)...')
-        const uploadInfo = await uploadNextcloudFile(localPath, filename, { isGif: true })
-        finalUrl = uploadInfo.publicUrl
-        console.log('🌐 Nextcloud remote path:', uploadInfo.remotePath)
-      } else {
-        console.log('🖼️ Uploading image to Nextcloud with watermark...')
-        watermarkedPath = path.join(targetDir, `watermarked_${filename}`)
-        const watermarkAsset = WATERMARK_FILE
-        let sourcePath = localPath
-
-        try {
-          await addWatermark(localPath, watermarkAsset, watermarkedPath)
-          if (fs.existsSync(watermarkedPath)) {
-            sourcePath = watermarkedPath
-          } else {
-            watermarkedPath = null
-          }
-        } catch (watermarkError) {
-          console.warn('⚠️ Nextcloud watermark failed, using original image:', watermarkError.message)
-          safeUnlink(watermarkedPath, 'watermark')
-          watermarkedPath = null
-          sourcePath = localPath
-        }
-
-        const uploadInfo = await uploadNextcloudFile(sourcePath, filename, { isGif: false })
-        finalUrl = uploadInfo.publicUrl
-        console.log('🌐 Nextcloud remote path:', uploadInfo.remotePath)
-      }
-    } else {
-      console.log('📦 Using FTP storage provider')
-      const cfg = getFtpConfig()
-      const basePath = isGif
-        ? (cfg.ftpPath.replace(/\/$/, '') + '/gif/')
-        : cfg.ftpPath
-      const normalizedBase = basePath.replace(/\\/g, '/').replace(/\/+/g, '/').replace(/([^/])$/, '$1/')
-      const remoteFile = `${normalizedBase}${filename}`.replace(/\/+/g, '/')
-
-      console.log('🌐 Remote path:', remoteFile)
-
-      if (isGif) {
-        console.log('🎞️ Uploading GIF to FTP (no watermark)...')
-        finalUrl = await uploadFtpFile(localPath, remoteFile)
-      } else {
-        console.log('🖼️ Uploading image to FTP with watermark...')
-        finalUrl = await copyFtpFile(localPath, remoteFile)
+    const buildLocalResult = () => {
+      const subDir = isGif ? 'gif' : 'img'
+      const relativePath = path.posix.join('uploads', subDir, filename)
+      const directLink = `${req.protocol}://${req.get('host')}/${relativePath.replace(/\\/g, '/')}`
+      return {
+        provider: 'local',
+        downloadUrl: `/${relativePath}`,
+        viewUrl: `/${relativePath}`,
+        directLink,
+        relativePath
       }
     }
 
-    console.log('✅ Storage upload successful:', finalUrl)
+    const results = []
+    const errors = []
+    const localResult = buildLocalResult()
+    let keepLocalFile = enableLocal || keepLocalCopy
 
-    const qrDataURL = await QRCode.toDataURL(finalUrl, {
+    if (enableLocal || keepLocalCopy) {
+      results.push({ ...localResult, retained: true })
+    }
+
+    if (enableNextcloud) {
+      try {
+        console.log('[nextcloud] Using Nextcloud storage provider')
+        if (isGif) {
+          console.log('[nextcloud] Uploading GIF to Nextcloud (no watermark)...')
+          const uploadInfo = await uploadNextcloudFile(localPath, filename, { isGif: true })
+          results.push({
+            provider: 'nextcloud',
+            downloadUrl: uploadInfo.publicUrl,
+            viewUrl: uploadInfo.publicUrl,
+            directLink: uploadInfo.publicUrl,
+            remotePath: uploadInfo.remotePath
+          })
+          console.log('[nextcloud] Nextcloud remote path:', uploadInfo.remotePath)
+        } else {
+          console.log('[nextcloud] Uploading image to Nextcloud with watermark...')
+          nextcloudWatermarkedPath = path.join(targetDir, `watermarked_${filename}`)
+          const watermarkAsset = WATERMARK_FILE
+          let sourcePath = localPath
+
+          try {
+            await addWatermark(localPath, watermarkAsset, nextcloudWatermarkedPath)
+            if (fs.existsSync(nextcloudWatermarkedPath)) {
+              sourcePath = nextcloudWatermarkedPath
+            } else {
+              nextcloudWatermarkedPath = null
+            }
+          } catch (watermarkError) {
+            console.warn('[nextcloud] Nextcloud watermark failed, using original image:', watermarkError.message)
+            safeUnlink(nextcloudWatermarkedPath, 'nextcloud watermark')
+            nextcloudWatermarkedPath = null
+            sourcePath = localPath
+          }
+
+          const uploadInfo = await uploadNextcloudFile(sourcePath, filename, { isGif: false })
+          results.push({
+            provider: 'nextcloud',
+            downloadUrl: uploadInfo.publicUrl,
+            viewUrl: uploadInfo.publicUrl,
+            directLink: uploadInfo.publicUrl,
+            remotePath: uploadInfo.remotePath
+          })
+          console.log('[nextcloud] Nextcloud remote path:', uploadInfo.remotePath)
+        }
+      } catch (nextcloudError) {
+        console.error('[nextcloud] Nextcloud upload error:', nextcloudError)
+        errors.push({ provider: 'nextcloud', message: nextcloudError.message })
+      } finally {
+        safeUnlink(nextcloudWatermarkedPath, 'nextcloud watermark')
+        nextcloudWatermarkedPath = null
+      }
+    }
+
+    if (enableFtp) {
+      try {
+        console.log('[ftp] Using FTP storage provider')
+        const cfg = getFtpConfig()
+        const basePath = isGif
+          ? (cfg.ftpPath.replace(/\/$/, '') + '/gif/')
+          : cfg.ftpPath
+        const normalizedBase = basePath.replace(/\\/g, '/').replace(/\/+/g, '/').replace(/([^/])$/, '$1/')
+        const remoteFile = `${normalizedBase}${filename}`.replace(/\/+/g, '/')
+        console.log('[ftp] Remote path:', remoteFile)
+
+        let finalUrl
+        if (isGif) {
+          console.log('[ftp] Uploading GIF to FTP (no watermark)...')
+          finalUrl = await uploadFtpFile(localPath, remoteFile)
+        } else {
+          console.log('[ftp] Uploading image to FTP with watermark...')
+          finalUrl = await copyFtpFile(localPath, remoteFile)
+        }
+
+        results.push({
+          provider: 'ftp',
+          downloadUrl: finalUrl,
+          viewUrl: finalUrl,
+          directLink: finalUrl,
+          remotePath: remoteFile
+        })
+        console.log('[ftp] FTP upload completed:', finalUrl)
+      } catch (ftpError) {
+        console.error('[ftp] FTP upload error:', ftpError)
+        errors.push({ provider: 'ftp', message: ftpError.message })
+      }
+    }
+
+    if (!results.length) {
+      results.push({ ...localResult, retained: true })
+      keepLocalFile = true
+    } else if ((keepLocalCopy || enableLocal) && !results.some(result => result.provider === 'local')) {
+      results.push({ ...localResult, retained: true })
+      keepLocalFile = true
+    }
+
+    const providerLogs = results.map(result => `${result.provider} -> ${result.directLink || result.downloadUrl}`)
+    if (providerLogs.length) {
+      console.log('[storage] Storage results:', providerLogs.join('; '))
+    }
+    if (errors.length) {
+      errors.forEach(errorInfo => {
+        console.warn(`[storage] ${errorInfo.provider} upload issue: ${errorInfo.message}`)
+      })
+    }
+
+    const primaryCandidate = primaryStorageProvider
+    let primaryResult = results.find(result => result.provider === primaryCandidate)
+
+    if (!primaryResult) {
+      const nonLocal = results.find(result => result.provider !== 'local')
+      primaryResult = nonLocal || results[0]
+    }
+
+    if (!primaryResult) {
+      primaryResult = { ...localResult, retained: true }
+      if (!results.some(result => result.provider === 'local')) {
+        results.push(primaryResult)
+      }
+      keepLocalFile = true
+    }
+
+    const qrTarget = primaryResult.directLink || primaryResult.downloadUrl
+    const qrDataURL = await QRCode.toDataURL(qrTarget, {
       width: 300,
       margin: 2,
       color: { dark: '#000000', light: '#FFFFFF' }
     })
 
-    safeUnlink(localPath, 'local upload')
-    safeUnlink(watermarkedPath, 'watermarked upload')
+    if (!keepLocalFile) {
+      safeUnlink(localPath, 'local upload')
+    }
 
     return res.json({
       success: true,
-      downloadUrl: finalUrl,
-      viewUrl: finalUrl,
-      directLink: finalUrl,
+      downloadUrl: primaryResult.downloadUrl,
+      viewUrl: primaryResult.viewUrl,
+      directLink: primaryResult.directLink,
       qrCode: qrDataURL,
       filename,
-      storageProvider: isNextcloudProvider ? 'nextcloud' : 'ftp'
+      storageProvider: primaryResult.provider,
+      storageResults: results,
+      storageErrors: errors.length ? errors : undefined
     })
   } catch (error) {
-    console.error('❌ Upload error, falling back to local storage:', error)
+    console.error('[upload] Upload error, falling back to local storage:', error)
 
     try {
       if (!fs.existsSync(localPath)) {
@@ -286,27 +414,38 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
         fs.writeFileSync(localPath, req.file.buffer)
       }
     } catch (writeError) {
-      console.error('❌ Failed to prepare local fallback file:', writeError)
+      console.error('[upload] Failed to prepare local fallback file:', writeError)
       return res.status(500).json({ error: 'Upload failed and local fallback unavailable' })
     }
 
     const subDir = isGif ? 'gif' : 'img'
     const relativePath = path.posix.join('uploads', subDir, filename)
-    const localUrl = `${req.protocol}://${req.get('host')}/${relativePath.replace(/\\/g, '/')}`
-    const qrDataURL = await QRCode.toDataURL(localUrl, {
+    const fallbackUrl = `${req.protocol}://${req.get('host')}/${relativePath.replace(/\\/g, '/')}`
+    const qrDataURL = await QRCode.toDataURL(fallbackUrl, {
       width: 300,
       margin: 2,
       color: { dark: '#000000', light: '#FFFFFF' }
     })
 
-    return res.json({
-      success: true,
+    const fallbackResult = {
+      provider: 'local',
       downloadUrl: `/${relativePath}`,
       viewUrl: `/${relativePath}`,
-      directLink: localUrl,
+      directLink: fallbackUrl,
+      relativePath,
+      retained: true
+    }
+
+    return res.json({
+      success: true,
+      downloadUrl: fallbackResult.downloadUrl,
+      viewUrl: fallbackResult.viewUrl,
+      directLink: fallbackResult.directLink,
       qrCode: qrDataURL,
       filename,
-      storageProvider: 'local-fallback'
+      storageProvider: 'local-fallback',
+      storageResults: [fallbackResult],
+      storageErrors: [{ provider: 'combined', message: error.message }]
     })
   }
 })
@@ -322,9 +461,18 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
   const ftpConfig = getFtpConfig()
   const ncConfig = getNextcloudConfig()
-  console.log(`🚀 Server running on port ${PORT}`)
-  console.log(`🔧 Active storage provider: ${STORAGE_PROVIDER}`)
-  console.log(`📡 FTP configured: ${!!(ftpConfig.ftpAddress && ftpConfig.ftpUsername && ftpConfig.ftpPassword)}`)
-  console.log(`☁️ Nextcloud configured: ${!!(ncConfig.serverUrl && ncConfig.webdavRoot && ncConfig.username && ncConfig.password)}`)
-  console.log(`🩺 Health check: http://localhost:${PORT}/health`)
+  console.log(`[server] Running on port ${PORT}`)
+  console.log(`[storage] Active providers: ${activeProviders.join(', ') || 'none'}`)
+  console.log(`[storage] Primary provider: ${primaryStorageProvider}`)
+  console.log(
+    `[ftp] Enabled: ${enableFtp} | configured: ${
+      !!(ftpConfig.ftpAddress && ftpConfig.ftpUsername && ftpConfig.ftpPassword)
+    }`
+  )
+  console.log(
+    `[nextcloud] Enabled: ${enableNextcloud} | configured: ${
+      !!(ncConfig.serverUrl && ncConfig.webdavRoot && ncConfig.username && ncConfig.password)
+    }`
+  )
+  console.log(`[health] Check: http://localhost:${PORT}/health`)
 })
