@@ -27,3 +27,6 @@ dist-ssr
 .env
 .env.*
 !.env.example
+# Google service account JSON (keep credentials out of repo)
+config/*.json
+public/upload/

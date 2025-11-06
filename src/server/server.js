@@ -19,6 +19,12 @@ import {
   updateNextcloudConfig,
   testNextcloudConnection
 } from './storages/nextcloudUtils.js'
+import {
+  uploadGoogleDriveFile,
+  getGoogleDriveConfig,
+  isGoogleDriveConfigured,
+  testGoogleDriveConnection
+} from './storages/googleDriveUtils.js'
 
 dotenv.config()
 
@@ -68,13 +74,30 @@ const resolveBoolean = (value, fallback) => {
   return parsed === null ? fallback : parsed
 }
 
-const defaultProvider = (process.env.STORAGE_PROVIDER || 'nextcloud').toLowerCase()
+const normalizeProvider = value => {
+  const normalized = (value || '').toString().trim().toLowerCase()
+  if (!normalized) return 'nextcloud'
+  if (['google', 'gdrive', 'google-drive', 'googledrive', 'drive'].includes(normalized)) return 'google-drive'
+  if (['ftp'].includes(normalized)) return 'ftp'
+  if (['local', 'filesystem', 'fs'].includes(normalized)) return 'local'
+  if (['nextcloud', 'nc'].includes(normalized)) return 'nextcloud'
+  return normalized
+}
 
-let enableNextcloud = resolveBoolean(process.env.ENABLE_NEXTCLOUD_STORAGE, defaultProvider === 'nextcloud')
+const defaultProvider = normalizeProvider(process.env.STORAGE_PROVIDER || 'nextcloud')
+
+let enableNextcloud = resolveBoolean(
+  process.env.ENABLE_NEXTCLOUD_STORAGE,
+  defaultProvider === 'nextcloud'
+)
 let enableFtp = resolveBoolean(process.env.ENABLE_FTP_STORAGE, defaultProvider === 'ftp')
+let enableGoogleDrive = resolveBoolean(
+  process.env.ENABLE_GOOGLE_DRIVE_STORAGE,
+  defaultProvider === 'google-drive'
+)
 let enableLocal = resolveBoolean(process.env.ENABLE_LOCAL_STORAGE, defaultProvider === 'local')
 
-if (!enableNextcloud && !enableFtp && !enableLocal) {
+if (!enableNextcloud && !enableFtp && !enableGoogleDrive && !enableLocal) {
   enableLocal = true
 }
 
@@ -83,13 +106,22 @@ const keepLocalCopy = resolveBoolean(process.env.KEEP_LOCAL_COPY, enableLocal)
 const activeProviders = []
 if (enableNextcloud) activeProviders.push('nextcloud')
 if (enableFtp) activeProviders.push('ftp')
+if (enableGoogleDrive) activeProviders.push('google-drive')
 if (enableLocal) activeProviders.push('local')
 
 const primaryStorageProvider = (() => {
-  const preferred = (process.env.PRIMARY_STORAGE_PROVIDER || defaultProvider || '').toLowerCase()
+  const preferred = normalizeProvider(process.env.PRIMARY_STORAGE_PROVIDER || defaultProvider || '')
   if (preferred && activeProviders.includes(preferred)) return preferred
   return activeProviders[0] || 'local'
 })()
+
+const resolvePublicBaseUrl = req => {
+  const configured = (process.env.PUBLIC_BASE_URL || '').trim()
+  if (configured) {
+    return configured.replace(/\/+$/, '')
+  }
+  return `${req.protocol}://${req.get('host')}`
+}
 
 app.use(express.json())
 app.use(express.static(path.resolve(__dirname, '..', '..', 'dist')))
@@ -184,6 +216,7 @@ app.post('/api/nextcloud/test', async (req, res) => {
 app.get('/health', (req, res) => {
   const ftpConfig = getFtpConfig()
   const ncConfig = getNextcloudConfig()
+  const gdConfig = getGoogleDriveConfig()
   res.json({
     status: 'ok',
     storage_provider: primaryStorageProvider,
@@ -198,6 +231,15 @@ app.get('/health', (req, res) => {
       path: ftpConfig.ftpPath,
       displayUrl: ftpConfig.displayUrl
     },
+    google_drive_enabled: enableGoogleDrive,
+    google_drive_configured: isGoogleDriveConfigured(),
+    google_drive_config: {
+      baseFolderId: gdConfig.baseFolderId,
+      gifFolderId: gdConfig.gifFolderId,
+      sharePublic: gdConfig.makePublic,
+      impersonateEmail: gdConfig.impersonateEmail || null
+    },
+    public_base_url: (process.env.PUBLIC_BASE_URL || '').trim() || null,
     nextcloud_enabled: enableNextcloud,
     nextcloud_configured: !!(ncConfig.serverUrl && ncConfig.webdavRoot && ncConfig.username && ncConfig.password),
     nextcloud_config: {
@@ -233,6 +275,7 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
   const targetDir = isGif ? UPLOAD_GIF_DIR : UPLOAD_IMG_DIR
   const localPath = path.join(targetDir, filename)
   let nextcloudWatermarkedPath = null
+  let googleDriveWatermarkedPath = null
 
   try {
     ensureDir(targetDir)
@@ -243,13 +286,15 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     const buildLocalResult = () => {
       const subDir = isGif ? 'gif' : 'img'
       const relativePath = path.posix.join('uploads', subDir, filename)
-      const directLink = `${req.protocol}://${req.get('host')}/${relativePath.replace(/\\/g, '/')}`
+      const basePublicUrl = resolvePublicBaseUrl(req)
+      const webPath = relativePath.replace(/\\/g, '/')
+      const directLink = `${basePublicUrl}/${webPath}`
       return {
         provider: 'local',
-        downloadUrl: `/${relativePath}`,
-        viewUrl: `/${relativePath}`,
+        downloadUrl: `/${webPath}`,
+        viewUrl: `/${webPath}`,
         directLink,
-        relativePath
+        relativePath: webPath
       }
     }
 
@@ -312,6 +357,51 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
       } finally {
         safeUnlink(nextcloudWatermarkedPath, 'nextcloud watermark')
         nextcloudWatermarkedPath = null
+      }
+    }
+
+    if (enableGoogleDrive) {
+      try {
+        console.log('[gdrive] Using Google Drive storage provider')
+        let driveSourcePath = localPath
+
+        if (!isGif) {
+          console.log('[gdrive] Uploading image to Google Drive with watermark...')
+          googleDriveWatermarkedPath = path.join(targetDir, `gdrive_watermarked_${filename}`)
+          try {
+            await addWatermark(localPath, WATERMARK_FILE, googleDriveWatermarkedPath)
+            if (fs.existsSync(googleDriveWatermarkedPath)) {
+              driveSourcePath = googleDriveWatermarkedPath
+            } else {
+              googleDriveWatermarkedPath = null
+            }
+          } catch (driveWatermarkError) {
+            console.warn('[gdrive] Google Drive watermark failed, using original image:', driveWatermarkError.message)
+            safeUnlink(googleDriveWatermarkedPath, 'gdrive watermark')
+            googleDriveWatermarkedPath = null
+            driveSourcePath = localPath
+          }
+        }
+
+        const uploadInfo = await uploadGoogleDriveFile(driveSourcePath, filename, {
+          isGif,
+          mimeType: req.file.mimetype
+        })
+
+        results.push({
+          provider: 'google-drive',
+          downloadUrl: uploadInfo.downloadUrl,
+          viewUrl: uploadInfo.viewUrl,
+          directLink: uploadInfo.publicUrl || uploadInfo.viewUrl,
+          remoteId: uploadInfo.fileId
+        })
+        console.log('[gdrive] Google Drive upload completed:', uploadInfo.viewUrl)
+      } catch (googleDriveError) {
+        console.error('[gdrive] Google Drive upload error:', googleDriveError)
+        errors.push({ provider: 'google-drive', message: googleDriveError.message })
+      } finally {
+        safeUnlink(googleDriveWatermarkedPath, 'gdrive watermark')
+        googleDriveWatermarkedPath = null
       }
     }
 
@@ -420,7 +510,9 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 
     const subDir = isGif ? 'gif' : 'img'
     const relativePath = path.posix.join('uploads', subDir, filename)
-    const fallbackUrl = `${req.protocol}://${req.get('host')}/${relativePath.replace(/\\/g, '/')}`
+    const basePublicUrl = resolvePublicBaseUrl(req)
+    const webPath = relativePath.replace(/\\/g, '/')
+    const fallbackUrl = `${basePublicUrl}/${webPath}`
     const qrDataURL = await QRCode.toDataURL(fallbackUrl, {
       width: 300,
       margin: 2,
@@ -429,10 +521,10 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 
     const fallbackResult = {
       provider: 'local',
-      downloadUrl: `/${relativePath}`,
-      viewUrl: `/${relativePath}`,
+      downloadUrl: `/${webPath}`,
+      viewUrl: `/${webPath}`,
       directLink: fallbackUrl,
-      relativePath,
+      relativePath: webPath,
       retained: true
     }
 

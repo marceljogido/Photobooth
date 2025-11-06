@@ -22,6 +22,13 @@ const canvas = document.createElement('canvas')
 const ctx = canvas.getContext('2d')
 const modeKeys = Object.keys(modes)
 const WATERMARK_OVERLAY_SRC = '/logowatermark.png'
+
+const DEBUG_LOGS_ENABLED =
+  String(import.meta.env?.VITE_DEBUG_LOGS ?? '').trim().toLowerCase() === 'true'
+const debugLog = (...args) => {
+  if (!DEBUG_LOGS_ENABLED) return
+  debugLog(...args)
+}
 const QR_TAB_OPTIONS = [
   {key: 'photo', label: 'QR Foto', icon: 'photo_camera'},
   {key: 'gif', label: 'QR GIF', icon: 'movie'}
@@ -161,7 +168,7 @@ const buildWatermarkedPreview = async base64Data => {
   }
 }
 export default function App() {
-  console.log('🚀 App component rendering...')
+  debugLog('🚀 App component rendering...')
   
   useEffect(() => {
     init()
@@ -170,13 +177,13 @@ export default function App() {
   let photos, customPrompt, activeMode, gifInProgress, gifUrl
   
   try {
-    console.log('🛠️ Attempting to load store...')
+    debugLog('🛠️ Attempting to load store...')
     photos = useStore.use.photos()
     customPrompt = useStore.use.customPrompt()
     activeMode = useStore.use.activeMode()
     gifInProgress = useStore.use.gifInProgress()
     gifUrl = useStore.use.gifUrl()
-    console.log('📦 Store state loaded:', { 
+    debugLog('📦 Store state loaded:', { 
       photosCount: photos.length, 
       activeMode, 
       customPromptLength: customPrompt.length 
@@ -189,10 +196,10 @@ export default function App() {
     activeMode = 'renaissance'
     gifInProgress = false
     gifUrl = null
-    console.log('🛟 Using fallback values')
+    debugLog('🛟 Using fallback values')
   }
   
-  console.log('🧩 About to render App component...')
+  debugLog('🧩 About to render App component...')
   
   const [videoActive, setVideoActive] = useState(false)
   const [didInitVideo, setDidInitVideo] = useState(false)
@@ -390,7 +397,7 @@ export default function App() {
     try {
       const readyCount = photos.filter(p => !p.isBusy).length
       if (readyCount > 0 && !gifInProgress && !gifUrl) {
-        console.log('🎞️ Auto-creating GIF because photos are ready...')
+        debugLog('🎞️ Auto-creating GIF because photos are ready...')
         makeGif()
       }
     } catch (e) {
@@ -400,7 +407,7 @@ export default function App() {
 
   const startVideo = async () => {
     try {
-      console.log('Starting video...')
+      debugLog('Starting video...')
       setIsLoading(true)
       setCameraError(null)
       setDidInitVideo(true)
@@ -439,12 +446,12 @@ export default function App() {
         // Try with high resolution first
         stream = await navigator.mediaDevices.getUserMedia(highResConstraints)
       } catch (error) {
-        console.log('High resolution failed, trying medium...', error)
+        debugLog('High resolution failed, trying medium...', error)
         try {
           // Try with medium resolution
           stream = await navigator.mediaDevices.getUserMedia(mediumResConstraints)
         } catch (fallbackError) {
-          console.log('Medium resolution failed, falling back to default constraints...', fallbackError)
+          debugLog('Medium resolution failed, falling back to default constraints...', fallbackError)
           stream = await navigator.mediaDevices.getUserMedia({
             audio: false,
             video: {
@@ -454,7 +461,7 @@ export default function App() {
         }
       }
       
-      console.log('Video stream obtained:', stream)
+      debugLog('Video stream obtained:', stream)
       setVideoActive(true)
       videoRef.current.srcObject = stream
       // Wait for video to load
@@ -481,7 +488,7 @@ export default function App() {
         )
         setCameraAspectRatio(displayAspect)
 
-        console.log('Video setup complete:', {
+        debugLog('Video setup complete:', {
           videoWidth: safeWidth,
           videoHeight: safeHeight,
           canvasWidth: geometry.canvasWidth,
@@ -620,17 +627,17 @@ export default function App() {
       setIsLoading(false)
     }
   }
-  const uploadToFTP = async (imageUrl, filename) => {
-    console.log('📤 Starting FTP upload for:', filename)
-    console.log('🔍 Image URL type:', imageUrl.startsWith('data:') ? 'Base64' : 'URL')
+  const uploadToStorage = async (imageUrl, filename) => {
+    debugLog('📤 Starting upload for:', filename)
+    debugLog('🔍 Image URL type:', imageUrl.startsWith('data:') ? 'Base64' : 'URL')
     
     try {
       // Convert base64 to blob
       const response = await fetch(imageUrl)
       const blob = await response.blob()
-      console.log('📦 Blob created, size:', blob.size)
+      debugLog('📦 Blob created, size:', blob.size)
       
-      // Upload ke FTP server
+      // Upload ke backend storage
       const formData = new FormData()
       formData.append('file', blob, filename)
       formData.append('name', filename)
@@ -640,12 +647,12 @@ export default function App() {
         body: formData
       })
       
-      console.log('📡 FTP server response status:', uploadResponse.status)
+      debugLog('📡 Upload response status:', uploadResponse.status)
       
       if (uploadResponse.ok) {
         const result = await uploadResponse.json()
         if (result.success && result.directLink) {
-          console.log('✅ FTP upload successful:', result.directLink)
+          debugLog('✅ Upload successful:', result.directLink)
           return {
             url: result.directLink,
             qrCode: result.qrCode
@@ -653,20 +660,20 @@ export default function App() {
         }
       }
       
-      throw new Error('FTP upload failed')
+      throw new Error('Upload failed')
     } catch (error) {
-      console.error('Error uploading to FTP:', error)
+      console.error('Error uploading to storage:', error)
       throw error
     }
   }
   const generateQRCodeFor = async (imageUrl, filename = null, cacheKey = null) => {
-    console.log('🧾 generateQRCodeFor called:', {filename, cacheKey})
-    console.log('🌐 Image URL for QR:', imageUrl)
+    debugLog('🧾 generateQRCodeFor called:', {filename, cacheKey})
+    debugLog('🌐 Image URL for QR:', imageUrl)
     
     const defaultFilename = filename || `digioh-photobooth-${Date.now()}.jpg`
     
     try {
-      const uploadResult = await uploadToFTP(imageUrl, defaultFilename)
+      const uploadResult = await uploadToStorage(imageUrl, defaultFilename)
       let qrCodeDataURL = uploadResult.qrCode
       
       if (!qrCodeDataURL) {
@@ -710,7 +717,7 @@ export default function App() {
           }))
         }
         
-        console.log('✅ QR Code generated with direct image URL fallback')
+        debugLog('✅ QR Code generated with direct image URL fallback')
         
         return {
           qrCode: qrCodeDataURL,
@@ -758,7 +765,7 @@ export default function App() {
       videoRef.current.srcObject = null
     }
     
-    console.log('🔄 Reset aplikasi untuk user berikutnya')
+    debugLog('🔄 Reset aplikasi untuk user berikutnya')
   }
   const prepareDownloadsForPhoto = useCallback(
     async (photoId, {force = false} = {}) => {
@@ -999,8 +1006,8 @@ export default function App() {
   }, [])
   // Tidak ada auto-start video - user harus klik tombol "Mari Berfoto!" dulu
   
-  console.log('🖥️ Rendering JSX now...')
-  console.log('🧠 Current state:', {
+  debugLog('🖥️ Rendering JSX now...')
+  debugLog('🧠 Current state:', {
     currentPage,
     videoActive,
     showPreview,
@@ -1037,7 +1044,7 @@ export default function App() {
     )
   }
   // Test render dulu
-  console.log('↩️ About to return JSX...')
+  debugLog('↩️ About to return JSX...')
   return (
     <>
       {/* Header dengan Logo dan Nama Aplikasi */}

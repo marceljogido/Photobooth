@@ -7,20 +7,21 @@ Booth swafoto interaktif yang memadukan kamera langsung dengan transformasi arti
 - **Workflow kamera adaptif**: Countdown 3 detik, deteksi orientasi otomatis, serta handling error izin/perangkat.
 - **Pratinjau dan watermark**: Preview hasil foto sebelum diproses AI dengan watermark bawaan acara.
 - **Generasi GIF otomatis**: Memadukan foto asli dan hasil AI menggunakan `gifenc`.
-- **Distribusi cepat**: Hasil foto dan GIF dapat dipindai lewat QR code, lengkap dengan upload ke Nextcloud atau FTP sebagai penyimpanan utama.
+- **Distribusi cepat**: Hasil foto dan GIF dapat dipindai lewat QR code, lengkap dengan upload ke Nextcloud, Google Drive, atau FTP sebagai penyimpanan utama.
 
 ## Prasyarat
 - Node.js 18 atau lebih baru.
 - Akun Google AI Studio dengan akses ke Gemini 2.5 Flash Image.
-- Kredensial Nextcloud atau FTP (opsional, untuk upload otomatis).
+- Kredensial Nextcloud, Google Drive (service account), atau FTP (opsional, untuk upload otomatis).
 - Berkas watermark PNG (default: `public/logowatermark.png`).
 
 ## Persiapan Lingkungan
 1. Salin `.env.example` menjadi `.env` lalu isi variabel berikut:
    - `GEMINI_API_KEY`
-   - `STORAGE_PROVIDER` (`nextcloud` atau `ftp`)
-   - Kredensial Nextcloud/FTP sesuai pilihan penyimpanan
+   - `STORAGE_PROVIDER` (`nextcloud`, `google-drive`, atau `ftp`)
+   - Kredensial Nextcloud/Google Drive/FTP sesuai pilihan penyimpanan
    - `WATERMARK_FILE_PATH` bila menggunakan watermark selain default
+   - (Opsional) `PUBLIC_BASE_URL` jika ingin memaksa domain tertentu untuk link/QR hasil upload
 2. Pasang dependensi:
    ```bash
    npm install
@@ -48,12 +49,13 @@ Antarmuka secara default dapat diakses di `http://localhost:5173`, sedangkan bac
 - `src/lib/actions.js` – logika pemrosesan foto, integrasi Gemini, dan pembuatan GIF.
 - `src/lib/llm.js` – pembungkus SDK `@google/genai` dengan retry dan pengaturan safety.
 - `src/lib/modes.js` – daftar gaya AI dan prompt bawaan.
-- `src/server/server.js` – layanan Express untuk upload, watermark, serta integrasi Nextcloud/FTP.
+- `src/server/server.js` – layanan Express untuk upload, watermark, serta integrasi Nextcloud/Google Drive/FTP.
 - `System.md` – dokumentasi sistem dan konsep produk lengkap.
 
 ## Testing Lapangan
 - Uji izin kamera pada perangkat target (Windows/Mac/Linux).
-- Pastikan koneksi Nextcloud/FTP berhasil lewat endpoint konfigurasi `/api/{provider}/test`.
+- Pastikan koneksi Nextcloud/Google Drive/FTP berhasil (cek `/health` atau endpoint konfigurasi `/api/{provider}/test`).
+- Jika memakai `PUBLIC_BASE_URL`, pastikan domain tersebut mengarah ke server dan Nginx mengizinkan akses ke `/upload/*`.
 - Coba scan QR dengan perangkat iOS dan Android untuk memastikan URL publik dapat diakses.
 - Simulasikan kegagalan jaringan untuk memverifikasi fallback penyimpanan lokal.
 
