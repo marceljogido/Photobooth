@@ -84,7 +84,7 @@ const normalizeProvider = value => {
   return normalized
 }
 
-const defaultProvider = normalizeProvider(process.env.STORAGE_PROVIDER || 'nextcloud')
+const defaultProvider = normalizeProvider(process.env.STORAGE_PROVIDER || 'local')
 
 let enableNextcloud = resolveBoolean(
   process.env.ENABLE_NEXTCLOUD_STORAGE,
