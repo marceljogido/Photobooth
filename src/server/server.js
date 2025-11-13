@@ -39,7 +39,7 @@ const WATERMARK_FILE =
 const UPLOAD_BASE_DIR =
   process.env.UPLOAD_BASE_DIR
     ? path.resolve(process.env.UPLOAD_BASE_DIR)
-    : path.resolve(__dirname, '..', '..', 'public', 'upload')
+    : path.resolve(__dirname, '..', '..', 'public', 'uploads')
 const UPLOAD_IMG_DIR = path.join(UPLOAD_BASE_DIR, 'img')
 const UPLOAD_GIF_DIR = path.join(UPLOAD_BASE_DIR, 'gif')
 

@@ -27,7 +27,11 @@ const DEBUG_LOGS_ENABLED =
   String(import.meta.env?.VITE_DEBUG_LOGS ?? '').trim().toLowerCase() === 'true'
 const debugLog = (...args) => {
   if (!DEBUG_LOGS_ENABLED) return
-  debugLog(...args)
+  try {
+    console.debug(...args)
+  } catch {
+    // console may be unavailable in some environments; ignore silently
+  }
 }
 const QR_TAB_OPTIONS = [
   {key: 'photo', label: 'QR Foto', icon: 'photo_camera'},
@@ -168,26 +172,29 @@ const buildWatermarkedPreview = async base64Data => {
   }
 }
 export default function App() {
-  debugLog('🚀 App component rendering...')
-  
+  const hasLoggedStoreInitRef = useRef(false)
+  const hasLoggedFallbackRef = useRef(false)
+
   useEffect(() => {
+    debugLog('🚀 App mounted')
     init()
+    return () => {
+      debugLog('👋 App unmounted')
+    }
   }, [])
   
   let photos, customPrompt, activeMode, gifInProgress, gifUrl
   
   try {
-    debugLog('🛠️ Attempting to load store...')
+    if (!hasLoggedStoreInitRef.current) {
+      debugLog('🛠️ Attempting to load store...')
+      hasLoggedStoreInitRef.current = true
+    }
     photos = useStore.use.photos()
     customPrompt = useStore.use.customPrompt()
     activeMode = useStore.use.activeMode()
     gifInProgress = useStore.use.gifInProgress()
     gifUrl = useStore.use.gifUrl()
-    debugLog('📦 Store state loaded:', { 
-      photosCount: photos.length, 
-      activeMode, 
-      customPromptLength: customPrompt.length 
-    })
   } catch (error) {
     console.error('⚠️ Error loading store:', error)
     // Fallback values
@@ -196,10 +203,19 @@ export default function App() {
     activeMode = 'renaissance'
     gifInProgress = false
     gifUrl = null
-    debugLog('🛟 Using fallback values')
+    if (!hasLoggedFallbackRef.current) {
+      debugLog('🛟 Using fallback store values')
+      hasLoggedFallbackRef.current = true
+    }
   }
-  
-  debugLog('🧩 About to render App component...')
+  useEffect(() => {
+    if (!DEBUG_LOGS_ENABLED) return
+    debugLog('📦 Store snapshot:', {
+      photosCount: photos.length,
+      activeMode,
+      customPromptLength: customPrompt.length
+    })
+  }, [photos.length, activeMode, customPrompt.length])
   
   const [videoActive, setVideoActive] = useState(false)
   const [didInitVideo, setDidInitVideo] = useState(false)
@@ -1005,15 +1021,16 @@ export default function App() {
     })
   }, [])
   // Tidak ada auto-start video - user harus klik tombol "Mari Berfoto!" dulu
-  
-  debugLog('🖥️ Rendering JSX now...')
-  debugLog('🧠 Current state:', {
-    currentPage,
-    videoActive,
-    showPreview,
-    currentPhotoId,
-    photosCount: photos.length
-  })
+  useEffect(() => {
+    if (!DEBUG_LOGS_ENABLED) return
+    debugLog('🧠 UI snapshot:', {
+      currentPage,
+      videoActive,
+      showPreview,
+      currentPhotoId,
+      photosCount: photos.length
+    })
+  }, [currentPage, videoActive, showPreview, currentPhotoId, photos.length])
   const currentPhoto = currentPhotoId
     ? photos.find(photo => photo.id === currentPhotoId)
     : null
@@ -1043,8 +1060,6 @@ export default function App() {
       </div>
     )
   }
-  // Test render dulu
-  debugLog('↩️ About to return JSX...')
   return (
     <>
       {/* Header dengan Logo dan Nama Aplikasi */}

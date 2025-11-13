@@ -20,7 +20,7 @@ const WATERMARK_FILE =
 const UPLOAD_BASE_DIR =
   process.env.UPLOAD_BASE_DIR
     ? path.resolve(process.env.UPLOAD_BASE_DIR)
-    : path.resolve(__dirname, '..', '..', '..', 'public', 'upload')
+    : path.resolve(__dirname, '..', '..', '..', 'public', 'uploads')
 const UPLOAD_TEMP_DIR = path.join(
   process.env.FTP_TEMP_DIR ? path.resolve(process.env.FTP_TEMP_DIR) : UPLOAD_BASE_DIR,
   'temp'
