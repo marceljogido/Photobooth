@@ -29,7 +29,7 @@ ensureDir(UPLOAD_IMG_DIR)
 ensureDir(UPLOAD_GIF_DIR)
 
 const app = express()
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT || 5000
 
 const resolvePublicBaseUrl = req => {
   const configured = (process.env.PUBLIC_BASE_URL || '').trim()
