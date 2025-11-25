@@ -23,11 +23,11 @@ export default {
       'Make the person look like a classical marble statue, including the clothes and eyes.'
   },
 
-  banana: {
-    name: 'Banana',
-    emoji: '\uD83C\uDF4C',
-    prompt: 'Make the person in the photo wear a banana costume.'
-  },
+  // banana: {
+  //   name: 'Banana',
+  //   emoji: '\uD83C\uDF4C',
+  //   prompt: 'Make the person in the photo wear a banana costume.'
+  // },
 
   '80s': {
     name: '80s',
@@ -50,25 +50,25 @@ export default {
       'Make the person in the photo look like a photorealistic anime character with exaggerated features.'
   },
 
-  psychedelic: {
-    name: 'Psychedelic',
-    emoji: '\uD83C\uDF08',
-    prompt:
-      "Create a 1960s psychedelic hand-drawn poster-style illustration based on this image with bright bold solid colors and swirling shapes. Don't add any text."
-  },
+  // psychedelic: {
+  //   name: 'Psychedelic',
+  //   emoji: '\uD83C\uDF08',
+  //   prompt:
+  //     "Create a 1960s psychedelic hand-drawn poster-style illustration based on this image with bright bold solid colors and swirling shapes. Don't add any text."
+  // },
 
-  '8bit': {
-    name: '8-bit',
-    emoji: '\uD83C\uDFAE',
-    prompt:
-      'Transform this image into a minimalist 8-bit brightly colored cute pixel art scene on a 80x80 pixel grid.'
-  },
+  // '8bit': {
+  //   name: '8-bit',
+  //   emoji: '\uD83C\uDFAE',
+  //   prompt:
+  //     'Transform this image into a minimalist 8-bit brightly colored cute pixel art scene on a 80x80 pixel grid.'
+  // },
 
-  beard: {
-    name: 'Big Beard',
-    emoji: '\uD83E\uDDD4\uD83C\uDFFB',
-    prompt: 'Make the person in the photo look like they have a huge beard.'
-  },
+  // beard: {
+  //   name: 'Big Beard',
+  //   emoji: '\uD83E\uDDD4\uD83C\uDFFB',
+  //   prompt: 'Make the person in the photo look like they have a huge beard.'
+  // },
 
   comic: {
     name: 'Comic Book',
@@ -77,11 +77,11 @@ export default {
       'Transform the photo into a comic book panel with bold outlines, halftone dots, and speech bubbles.'
   },
 
-  old: {
-    name: 'Old',
-    emoji: '\uD83D\uDC75\uD83C\uDFFB',
-    prompt: 'Make the person in the photo look extremely old.'
-  },
+  // old: {
+  //   name: 'Old',
+  //   emoji: '\uD83D\uDC75\uD83C\uDFFB',
+  //   prompt: 'Make the person in the photo look extremely old.'
+  // },
 
   cyberpunk: {
     name: 'Cyberpunk Neon',
@@ -90,31 +90,59 @@ export default {
       'Transform the person into a cyberpunk night scene with neon lights, reflective rain-soaked streets, and futuristic clothing, keeping the pose the same.'
   },
 
-  vintagebali: {
-    name: 'Vintage Bali',
-    emoji: '\uD83C\uDF3A',
-    prompt:
-      'Give the photo a 1990s Bali vacation vibe with warm film tones, tropical scenery, and relaxed summer outfits, adding subtle film grain.'
-  },
+  // vintagebali: {
+  //   name: 'Vintage Bali',
+  //   emoji: '\uD83C\uDF3A',
+  //   prompt:
+  //     'Give the photo a 1990s Bali vacation vibe with warm film tones, tropical scenery, and relaxed summer outfits, adding subtle film grain.'
+  // },
 
-  kpop: {
-    name: 'K-Pop Idol',
-    emoji: '\uD83C\uDFA4',
-    prompt:
-      'Style the person as a K-pop idol in a studio photoshoot with dramatic lighting, glossy skin, vibrant stage outfit, and energetic pose.'
-  },
+  // kpop: {
+  //   name: 'K-Pop Idol',
+  //   emoji: '\uD83C\uDFA4',
+  //   prompt:
+  //     'Style the person as a K-pop idol in a studio photoshoot with dramatic lighting, glossy skin, vibrant stage outfit, and energetic pose.'
+  // },
 
-  astronaut: {
-    name: 'Astronaut Selfie',
-    emoji: '\uD83D\uDE80',
-    prompt:
-      'Place the person inside a shiny astronaut helmet with reflections of Earth or deep space, realistic suit details, and cinematic lighting.'
-  },
+  // astronaut: {
+  //   name: 'Astronaut Selfie',
+  //   emoji: '\uD83D\uDE80',
+  //   prompt:
+  //     'Place the person inside a shiny astronaut helmet with reflections of Earth or deep space, realistic suit details, and cinematic lighting.'
+  // },
 
   festivalbatik: {
     name: 'Festival Batik',
     emoji: '\uD83C\uDFAF',
     prompt:
       'Dress the person in modern batik fashion on a lively cultural festival stage with warm lighting, festive decorations, and joyful atmosphere.'
+  },
+
+  byteplus: {
+    name: 'BytePlus Futuristic',
+    emoji: '\uD83C\uDF0C',
+    prompt:
+      'Transform the subject into a sleek tech ambassador with holographic interface elements, BytePlus-inspired aqua gradients, reflective surfaces, and premium booth lighting.'
+  },
+
+  galaportrait: {
+    name: 'Gala Portrait',
+    emoji: '\uD83C\uDFC6',
+    prompt:
+      'Render a luxurious gala portrait with cinematic rim lighting, high-fashion evening attire, soft bokeh lights, and a refined editorial color grade.'
+  },
+
+  neonstudio: {
+    name: 'Neon Studio',
+    emoji: '\uD83D\uDD06',
+    prompt:
+      'Polish the subject inside a minimalist neon studio with crisp high-contrast lighting, subtle gradients, and glowing color-accented shadows for social-media ready shots.'
+  },
+
+  heritagegold: {
+    name: 'Heritage Batik Gold',
+    emoji: '\uD83C\uDF81',
+    prompt:
+      'Style the subject in formal batik with gold embroidery, add elegant jewelry accents, and place them in a softly lit heritage backdrop with warm spotlight highlights.'
   }
 }

@@ -46,6 +46,8 @@ const PORTRAIT_ASPECT = 9 / 16
 const LANDSCAPE_ASPECT = 16 / 9
 const FORCE_PORTRAIT_CAPTURE = false
 const DESKTOP_BREAKPOINT = 1024
+const BYTEPLUS_URL =
+  'https://www.byteplus.com/id?gad_source=1&gad_campaignid=23246596293&gbraid=0AAAAA9g5XBR57PBcd0U-6u50mpmhD_D-X&gclid=Cj0KCQiAoZDJBhC0ARIsAERP-F9oz6pNi7N39LRE7SnToTHTBJey5eHt-yz5jpBKxnArG_jy-fL7yF4aAsrbEALw_wcB'
 
 const resolveViewportOrientation = () => {
   if (FORCE_PORTRAIT_CAPTURE) return 'portrait'
@@ -255,6 +257,7 @@ export default function App() {
     width: typeof window !== 'undefined' ? window.innerWidth : 0,
     height: typeof window !== 'undefined' ? window.innerHeight : 0
   }))
+  const [showLandingScreen, setShowLandingScreen] = useState(true)
   const watermarkedOutputsRef = useRef({})
   const uploadTokenRef = useRef(0)
   useEffect(() => {
@@ -1060,6 +1063,51 @@ export default function App() {
       </div>
     )
   }
+
+  if (showLandingScreen) {
+    return (
+      <div className="landingScreen">
+        <div className="landingBackdrop landingBackdrop--left" />
+        <div className="landingBackdrop landingBackdrop--right" />
+        <div className="landingCard">
+          <div className="landingBadge">Event Experience</div>
+          <div className="landingLogo">
+            <img src="/DIGIOH_Logomark.svg" alt="digiSelfie AI" />
+            <div>
+              <p className="landingLogoTitle">digiSelfie AI</p>
+              <span>Powered by DigiOH</span>
+            </div>
+          </div>
+          <h1 className="landingTitle">
+            <span>Selamat</span>
+            <span>Datang</span>
+          </h1>
+          <p className="landingSubtitle">
+            Pilih destinasi sebelum memulai pengalaman photobooth Anda bersama BytePlus x DigiOH.
+          </p>
+          <div className="landingActions">
+            <button
+              type="button"
+              className="landingButton secondary"
+              onClick={() => window.open(BYTEPLUS_URL, '_blank', 'noopener,noreferrer')}
+            >
+              <span className="icon">language</span>
+              WEBSITE BYTEPLUS
+            </button>
+            <button
+              type="button"
+              className="landingButton primary"
+              onClick={() => setShowLandingScreen(false)}
+            >
+              <span className="icon">camera_enhance</span>
+              PHOTOBOOTH AI
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
       {/* Header dengan Logo dan Nama Aplikasi */}
@@ -1175,7 +1223,7 @@ export default function App() {
                     {(isProcessingPhoto || photos.find(p => p.id === currentPhotoId)?.isBusy) ? (
                       <div className="processingStatus">
                         <div className="spinner"></div>
-                        <p>AI sedang memproses foto...</p>
+                        <p>Foto Anda sedang diproses dengan AI.</p>
                       </div>
                     ) : (
                       <div className="readyStatus">
@@ -1219,9 +1267,9 @@ export default function App() {
               <span className="dot dot-2"></span>
               <span className="dot dot-3"></span>
             </div>
-            <h3 className="aiProcessingTitle">AI lagi memoles fotomu</h3>
+            <h3 className="aiProcessingTitle">Foto Anda sedang diproses dengan AI.</h3>
             <p className="aiProcessingSubtitle">
-              Pegang dulu posenya ya… hasil kece bakal muncul sebentar lagi!
+              Harap menunggu, pratinjau akan siap segera.
             </p>
           </div>
         </div>
