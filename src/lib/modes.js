@@ -196,4 +196,25 @@ export default {
       'Group portrait in the style of a modern Disney animated poster with expressive characters, painterly highlights, and whimsical props surrounding the subject.'
   },
 
+  kebayaelegan: {
+    name: 'Kebaya Elegan',
+    emoji: '\uD83C\uDF80',
+    prompt:
+      'Create a studio portrait where the subject wears a luxurious kebaya with intricate lace, songket kain, gilded accessories, and warm tungsten lighting inspired by Indonesian royal photos.'
+  },
+
+  adatnusantara: {
+    name: 'Adat Nusantara',
+    emoji: '\uD83C\uDF3A',
+    prompt:
+      'Dress the subject in a mix of Indonesian traditional attire—songket, ulos, batik—complete with ornate headdresses, beadwork, and a rich textile backdrop reminiscent of Nusantara heritage studios.'
+  },
+
+  baliceremony: {
+    name: 'Upacara Bali',
+    emoji: '\uD83C\uDF34',
+    prompt:
+      'Place the person inside a Balinese temple ceremony, wearing ceremonial attire with udeng crown or gelungan, surrounded by penjor decorations, incense smoke, and golden sunrise light.'
+  },
+
 }
