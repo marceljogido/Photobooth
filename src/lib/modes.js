@@ -179,7 +179,7 @@ export default {
     emoji: '\uD83C\uDF81',
     prompt:
       'Style the subject in formal batik with gold embroidery, add elegant jewelry accents, and place them in a softly lit heritage backdrop with warm spotlight highlights.'
-  }
+  },
 
   // neonstudio: {
   //   name: 'Neon Studio',
