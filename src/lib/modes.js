@@ -28,6 +28,12 @@ export default {
   //   emoji: '\uD83C\uDF4C',
   //   prompt: 'Make the person in the photo wear a banana costume.'
   // },
+  comic: {
+    name: 'Comic Book',
+    emoji: '\uD83D\uDCA5',
+    prompt:
+      'Transform the photo into a comic book panel with bold outlines, halftone dots, and speech bubbles.'
+  },
 
   '80s': {
     name: '80s',
