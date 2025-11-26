@@ -29,11 +29,11 @@ export default {
   //   prompt: 'Make the person in the photo wear a banana costume.'
   // },
   
-  comic: {
-    name: 'Comic Book',
+  moderncomic: {
+    name: 'Modern Comic',
     emoji: '\uD83D\uDCA5',
     prompt:
-      'Transform the photo into a comic book panel with bold outlines, halftone dots, and speech bubbles.'
+      'A modern, dynamic comic book style from the 90s/2000s. Sharp, detailed inks, complex cross-hatching for shadows, and vibrant digitally-painted colors with energetic poses.'
   },
 
   '80s': {
