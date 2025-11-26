@@ -174,6 +174,21 @@ export default {
       'Transform the subject into a vintage VIP riding in the backseat of a 1960s classic car with cream leather interior, warm golden light, and elegant champagne details.'
   },
 
+  heritagegold: {
+    name: 'Heritage Batik Gold',
+    emoji: '\uD83C\uDF81',
+    prompt:
+      'Style the subject in formal batik with gold embroidery, add elegant jewelry accents, and place them in a softly lit heritage backdrop with warm spotlight highlights.'
+  }
+
+  neonstudio: {
+    name: 'Neon Studio',
+    emoji: '\uD83D\uDD06',
+    prompt:
+      'Dress the person in modern batik fashion on a lively cultural festival stage with warm lighting, festive decorations, and joyful atmosphere.'
+      'Polish the subject inside a minimalist neon studio with crisp high-contrast lighting, subtle gradients, and glowing color-accented shadows for social-media ready shots.'
+  },
+
   disneyprincess: {
     name: 'Disney Princess',
     emoji: '\uD83D\uDC78',
