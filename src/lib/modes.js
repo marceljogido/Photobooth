@@ -185,8 +185,7 @@ export default {
     name: 'Neon Studio',
     emoji: '\uD83D\uDD06',
     prompt:
-      'Dress the person in modern batik fashion on a lively cultural festival stage with warm lighting, festive decorations, and joyful atmosphere.'
-      'Polish the subject inside a minimalist neon studio with crisp high-contrast lighting, subtle gradients, and glowing color-accented shadows for social-media ready shots.'
+    'Polish the subject inside a minimalist neon studio with crisp high-contrast lighting, subtle gradients, and glowing color-accented shadows for social-media ready shots.'
   },
 
   disneyprincess: {
