@@ -181,12 +181,12 @@ export default {
       'Style the subject in formal batik with gold embroidery, add elegant jewelry accents, and place them in a softly lit heritage backdrop with warm spotlight highlights.'
   }
 
-  neonstudio: {
-    name: 'Neon Studio',
-    emoji: '\uD83D\uDD06',
-    prompt:
-    'Polish the subject inside a minimalist neon studio with crisp high-contrast lighting, subtle gradients, and glowing color-accented shadows for social-media ready shots.'
-  },
+  // neonstudio: {
+  //   name: 'Neon Studio',
+  //   emoji: '\uD83D\uDD06',
+  //   prompt:
+  //   'Polish the subject inside a minimalist neon studio with crisp high-contrast lighting, subtle gradients, and glowing color-accented shadows for social-media ready shots.'
+  // },
 
   disneyprincess: {
     name: 'Disney Princess',
