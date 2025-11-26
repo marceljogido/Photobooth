@@ -10,10 +10,10 @@ export default {
   },
 
   cartoon: {
-    name: 'Cartoon',
+    name: 'Cartoon Craze',
     emoji: '\uD83D\uDE03',
     prompt:
-      'Transform this image into a cute simple cartoon. Use minimal lines and solid colors.'
+      'A friendly, colorful 3D cartoon style like a modern animated movie. Soft shading, rounded features, and a warm, inviting look.'
   },
 
   statue: {
@@ -44,10 +44,10 @@ export default {
   },
 
   anime: {
-    name: 'Anime',
+    name: 'Anime Vision',
     emoji: '\uD83C\uDF63',
     prompt:
-      'Make the person in the photo look like a photorealistic anime character with exaggerated features.'
+      'A vibrant, high-detail anime art style, similar to a modern feature film. Sharp lines, expressive eyes, and dynamic, cinematic lighting.'
   },
 
   // psychedelic: {
@@ -71,17 +71,11 @@ export default {
   // },
 
   comic: {
-    name: 'Comic Book',
+    name: 'Modern Comic',
     emoji: '\uD83D\uDCA5',
     prompt:
-      'Transform the photo into a comic book panel with bold outlines, halftone dots, and speech bubbles.'
+      'A modern, dynamic comic book style from the 90s/2000s. Sharp, detailed inks, complex cross-hatching for shadows, and vibrant digitally-painted colors with energetic poses.'
   },
-
-  // old: {
-  //   name: 'Old',
-  //   emoji: '\uD83D\uDC75\uD83C\uDFFB',
-  //   prompt: 'Make the person in the photo look extremely old.'
-  // },
 
   cyberpunk: {
     name: 'Cyberpunk Neon',
@@ -139,10 +133,67 @@ export default {
       'Polish the subject inside a minimalist neon studio with crisp high-contrast lighting, subtle gradients, and glowing color-accented shadows for social-media ready shots.'
   },
 
-  heritagegold: {
-    name: 'Heritage Batik Gold',
-    emoji: '\uD83C\uDF81',
+  // gothicportrait: {
+  //   name: 'Gothic Oil Painting',
+  //   emoji: '\uD83C\uDFA8',
+  //   prompt:
+  //     'A moody, classical oil painting with dramatic lighting, deep shadows, rich layered textures, and a gothic atmosphere.'
+  // },
+
+  pixelhero: {
+    name: 'Pixel Hero',
+    emoji: '\uD83C\uDFAE',
     prompt:
-      'Style the subject in formal batik with gold embroidery, add elegant jewelry accents, and place them in a softly lit heritage backdrop with warm spotlight highlights.'
-  }
+      'Retro 16-bit pixel art style, like a character from a classic SNES RPG with a limited color palette and chunky pixels.'
+  },
+
+  stickerpop: {
+    name: 'Sticker Pop',
+    emoji: '\uD83C\uDF88',
+    prompt:
+      'A vibrant die-cut vinyl sticker look with bold outlines, saturated colors, and a thick white border around the character.'
+  },
+
+  blockbuster: {
+    name: 'Blockbuster Hero',
+    emoji: '\uD83C\uDFC5',
+    prompt:
+      'Hyper-realistic live-action superhero style with cinematic lighting, photoreal skin and suit textures, motion blur, and dramatic color grading.'
+  },
+
+  retrochauffeur: {
+    name: 'Retro Chauffeur',
+    emoji: '\uD83D\uDC51',
+    prompt:
+      'Transform the subject into a vintage VIP riding in the backseat of a 1960s classic car with cream leather interior, warm golden light, and elegant champagne details.'
+  },
+
+  disneyprincess: {
+    name: 'Disney Princess',
+    emoji: '\uD83D\uDC78',
+    prompt:
+      'Transform the subject into a classic Disney princess illustration while keeping their facial identity, using pastel gowns, sparkling tiara, soft painterly shading, and an enchanting fairy-tale background.'
+  },
+
+  disneyprince: {
+    name: 'Royal Prince',
+    emoji: '\uD83E\uDDD4',
+    prompt:
+      'Render the subject as a charming Disney-style prince but retain their original facial features, adding tailored royal attire, vibrant cape, and a golden castle backdrop with magical twinkling lights.'
+  },
+
+  disneyvillain: {
+    name: 'Fairy-Tale Villain',
+    emoji: '\uD83D\uDD25',
+    prompt:
+      "Create a dramatic Disney-inspired villain portrait that still keeps the subject's face, with bold shadows, extravagant costume details, glowing mystical elements, and a moody enchanted backdrop."
+  },
+
+  disneyensemble: {
+    name: 'Animated Ensemble',
+    emoji: '\u2728',
+    prompt:
+      'Group portrait in the style of a modern Disney animated poster with expressive characters, painterly highlights, and whimsical props surrounding the subject.'
+  },
+
 }
