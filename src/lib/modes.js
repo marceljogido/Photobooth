@@ -168,6 +168,13 @@ export default {
       'Hyper-realistic live-action superhero style with cinematic lighting, photoreal skin and suit textures, motion blur, and dramatic color grading.'
   },
 
+  sportshighlight: {
+    name: 'Sports Highlight',
+    emoji: '\u26BD',
+    prompt:
+      'Turn the subject into a star athlete mid-action with crisp arena lighting, dynamic motion blur, flying sweat particles, and dramatic spotlight beams, keeping the real facial identity sharp, front-facing, and unobstructed while adding authentic pro-sports uniforms.'
+  },
+
   retrochauffeur: {
     name: 'Retro Chauffeur',
     emoji: '\uD83D\uDC51',

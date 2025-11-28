@@ -5,6 +5,7 @@ import fs from 'fs'
 import { fileURLToPath } from 'url'
 import dotenv from 'dotenv'
 import QRCode from 'qrcode'
+import sharp from 'sharp'
 
 dotenv.config()
 
@@ -17,6 +18,10 @@ const UPLOAD_BASE_DIR =
     : path.resolve(__dirname, '..', '..', 'public', 'uploads')
 const UPLOAD_IMG_DIR = path.join(UPLOAD_BASE_DIR, 'img')
 const UPLOAD_GIF_DIR = path.join(UPLOAD_BASE_DIR, 'gif')
+const WATERMARK_FILE =
+  process.env.WATERMARK_FILE_PATH
+    ? path.resolve(process.env.WATERMARK_FILE_PATH)
+    : path.resolve(__dirname, '..', '..', 'public', 'logowatermark.png')
 
 const ensureDir = dir => {
   if (!fs.existsSync(dir)) {
@@ -27,6 +32,10 @@ const ensureDir = dir => {
 ensureDir(UPLOAD_BASE_DIR)
 ensureDir(UPLOAD_IMG_DIR)
 ensureDir(UPLOAD_GIF_DIR)
+
+if (!fs.existsSync(WATERMARK_FILE)) {
+  console.warn(`[watermark] File not found at ${WATERMARK_FILE}. Uploaded photos will skip watermarking.`)
+}
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -48,6 +57,71 @@ const upload = multer({
 })
 
 console.log(`[storage] Provider: local (hardcoded)`)
+
+const shouldWatermarkMimetype = mimetype => {
+  if (!mimetype) return true
+  const normalized = String(mimetype).toLowerCase()
+  return normalized.startsWith('image/') && normalized !== 'image/gif'
+}
+
+const applyWatermarkToBuffer = async (buffer, mimetype) => {
+  const watermarkAvailable = fs.existsSync(WATERMARK_FILE)
+  if (!watermarkAvailable) {
+    return buffer
+  }
+
+  if (!buffer || buffer.length === 0) {
+    return buffer
+  }
+
+  if (!shouldWatermarkMimetype(mimetype)) {
+    return buffer
+  }
+
+  try {
+    const imageMetadata = await sharp(buffer).metadata()
+    if (!imageMetadata?.width || !imageMetadata?.height) {
+      return buffer
+    }
+
+    const watermarkMetadata = await sharp(WATERMARK_FILE).metadata()
+    if (!watermarkMetadata?.width || !watermarkMetadata?.height) {
+      console.warn('[watermark] Unable to read watermark metadata; skipping.')
+      return buffer
+    }
+
+    const targetWidth = Math.max(1, Math.round(imageMetadata.width * 0.2))
+    const targetHeight = Math.max(
+      1,
+      Math.round(targetWidth * (watermarkMetadata.height / watermarkMetadata.width))
+    )
+    const margin = Math.max(10, Math.round(Math.min(imageMetadata.width, imageMetadata.height) * 0.04))
+    const left = Math.max(0, imageMetadata.width - targetWidth - margin)
+    const top = Math.max(0, imageMetadata.height - targetHeight - margin)
+
+    const watermarkBuffer = await sharp(WATERMARK_FILE)
+      .resize(targetWidth, targetHeight, { fit: 'inside' })
+      .png()
+      .toBuffer()
+
+    const pipeline = sharp(buffer).composite([{ input: watermarkBuffer, left, top }])
+
+    if (imageMetadata.format === 'jpeg' || imageMetadata.format === 'jpg') {
+      pipeline.jpeg({ quality: 92 })
+    } else if (imageMetadata.format === 'png') {
+      pipeline.png()
+    } else if (imageMetadata.format === 'webp') {
+      pipeline.webp({ quality: 92 })
+    }
+
+    const processed = await pipeline.toBuffer()
+    console.log('[watermark] ✅ Applied watermark to uploaded photo')
+    return processed
+  } catch (error) {
+    console.warn('[watermark] Failed to apply watermark, saving original image:', error.message)
+    return buffer
+  }
+}
 
 // Upload endpoint simplified for local storage only
 app.post('/api/upload', upload.single('file'), async (req, res) => {
@@ -73,7 +147,10 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 
   try {
     ensureDir(targetDir)
-    fs.writeFileSync(localPath, req.file.buffer)
+    const fileBuffer = isGif
+      ? req.file.buffer
+      : await applyWatermarkToBuffer(req.file.buffer, req.file.mimetype)
+    fs.writeFileSync(localPath, fileBuffer)
 
     console.log('[upload] File saved locally:', localPath)
 
