@@ -44,10 +44,10 @@ const RESULT_TAB_OPTIONS = [
 
 const PORTRAIT_ASPECT = 9 / 16
 const LANDSCAPE_ASPECT = 16 / 9
-const FORCE_PORTRAIT_CAPTURE = false
+const FORCE_PORTRAIT_CAPTURE = true
 const DESKTOP_BREAKPOINT = 1024
-const BYTEPLUS_URL =
-  'https://www.byteplus.com/id?gad_source=1&gad_campaignid=23246596293&gbraid=0AAAAA9g5XBR57PBcd0U-6u50mpmhD_D-X&gclid=Cj0KCQiAoZDJBhC0ARIsAERP-F9oz6pNi7N39LRE7SnToTHTBJey5eHt-yz5jpBKxnArG_jy-fL7yF4aAsrbEALw_wcB'
+const digioh_URL =
+  'https://www.canva.com/design/DAGctKC-Jjc/cxo9KqGareKITmKpyAnoUg/view?utm_content=DAGctKC-Jjc&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=ha6a2c2cae4#2'
 
 const resolveViewportOrientation = () => {
   if (FORCE_PORTRAIT_CAPTURE) return 'portrait'
@@ -249,6 +249,7 @@ export default function App() {
   )
   const [shouldRotateVideo, setShouldRotateVideo] = useState(false)
   const [isPortraitCapture, setIsPortraitCapture] = useState(initialOrientation === 'portrait')
+  const [forcedOrientation, setForcedOrientation] = useState(null) // 'portrait' | 'landscape' | null
   const [cloudUrls, setCloudUrls] = useState({}) // Store cloud URLs for photos
   const [watermarkedOutputs, setWatermarkedOutputs] = useState({})
   const [preparedDownloads, setPreparedDownloads] = useState({})
@@ -278,53 +279,29 @@ export default function App() {
     }
   }, [])
   const cameraStyle = useMemo(() => {
-    const aspect = cameraAspectRatio > 0 ? cameraAspectRatio : 1
-    const treatAsPortrait = aspect < 1 || isViewportPortrait || isPortraitCapture
-    const viewportHeight = viewportSize.height || 0
-    const headerHeight = isViewportPortrait ? 78 : 84
-    const verticalPadding = isViewportPortrait ? 36 : 48
-    const availableHeight =
-      viewportHeight > 0 ? Math.max(0, viewportHeight - headerHeight - verticalPadding) : null
-
-    let widthValue
-    let maxHeightValue
-
-    if (treatAsPortrait) {
-      if (availableHeight && availableHeight > 0) {
-        const widthFromHeight = availableHeight * aspect
-        const maxWidthPx = widthFromHeight > 0 ? Math.min(widthFromHeight, 420) : 0
-        widthValue =
-          maxWidthPx > 0
-            ? `min(88vw, ${Math.round(maxWidthPx)}px)`
-            : 'var(--camera-mobile-width, min(88vw, 420px))'
-        maxHeightValue = `${Math.round(Math.min(availableHeight, 720))}px`
-      } else {
-        widthValue = 'var(--camera-mobile-width, min(88vw, 420px))'
-        maxHeightValue = 'var(--camera-mobile-max-height, auto)'
-      }
-    } else {
-      widthValue = 'min(90vw, 1080px)'
-      if (availableHeight && availableHeight > 0) {
-        maxHeightValue = `${Math.round(Math.min(availableHeight, 608))}px`
-      } else {
-        maxHeightValue = 'min(80vh, 608px)'
+    const portrait = videoActive ? isPortraitCapture : true
+    const header = 84
+    const padding = 40
+    if (portrait) {
+      return {
+        aspectRatio: '9 / 16',
+        height: `calc(100vh - ${header}px - ${padding * 2}px)`,
+        maxHeight: `calc(100vh - ${header}px - ${padding * 2}px)`,
+        width: `calc((100vh - ${header}px - ${padding * 2}px) * 0.5625)`,
+        maxWidth: '82vw',
+        margin: `${Math.round(padding / 4)}px auto`,
+        borderRadius: 16
       }
     }
-
     return {
-      aspectRatio: aspect,
-      width: widthValue,
-      maxWidth: '100%',
+      aspectRatio: '16 / 9',
+      width: 'min(90vw, 820px)',
+      maxWidth: '820px',
       height: 'auto',
-      maxHeight: maxHeightValue,
-      margin: 'var(--camera-margin, 0 auto)'
+      margin: '12px auto',
+      borderRadius: 16
     }
-  }, [
-    cameraAspectRatio,
-    isViewportPortrait,
-    isPortraitCapture,
-    viewportSize.height
-  ])
+  }, [isPortraitCapture])
   
   useEffect(() => {
     if (photos.length === 0) {
@@ -424,7 +401,7 @@ export default function App() {
     }
   }, [photos, gifInProgress, gifUrl])
 
-  const startVideo = async () => {
+  const startVideo = async (orientationOverride = null) => {
     try {
       debugLog('Starting video...')
       setIsLoading(true)
@@ -436,10 +413,20 @@ export default function App() {
         throw new Error('getUserMedia tidak didukung di browser ini')
       }
       
-      const desiredOrientation = resolveViewportOrientation()
+      const desiredOrientation =
+        orientationOverride || forcedOrientation || resolveViewportOrientation()
       const portraitDesired = desiredOrientation === 'portrait'
       setIsViewportPortrait(portraitDesired)
       const preferredAspect = portraitDesired ? PORTRAIT_ASPECT : LANDSCAPE_ASPECT
+      // Stop existing tracks before requesting new stream
+      try {
+        const currentStream = videoRef.current?.srcObject
+        if (currentStream) {
+          currentStream.getTracks().forEach(track => track.stop())
+        }
+      } catch (stopErr) {
+        debugLog('Failed stopping previous stream', stopErr)
+      }
       const highResConstraints = {
         audio: false,
         video: {
@@ -644,6 +631,14 @@ export default function App() {
       setCameraError('Gagal mengambil foto. Silakan coba lagi.')
     } finally {
       setIsLoading(false)
+    }
+  }
+  const toggleOrientation = () => {
+    const next = isPortraitCapture ? 'landscape' : 'portrait'
+    setForcedOrientation(next)
+    setIsPortraitCapture(next === 'portrait')
+    if (videoActive) {
+      startVideo(next)
     }
   }
   const uploadToStorage = async (imageUrl, filename) => {
@@ -1070,7 +1065,7 @@ export default function App() {
         <div className="landingBackdrop landingBackdrop--left" />
         <div className="landingBackdrop landingBackdrop--right" />
         <div className="landingCard">
-          <div className="landingBadge">Event Experience</div>
+          <div className="landingBadge">Profesional Event Experience</div>
           <div className="landingLogo">
             <img src="/DIGIOH_Logomark.svg" alt="digiSelfie AI" />
             <div>
@@ -1083,16 +1078,16 @@ export default function App() {
             <span>Datang</span>
           </h1>
           <p className="landingSubtitle">
-            Pilih destinasi sebelum memulai pengalaman photobooth Anda bersama BytePlus x DigiOH.
+            Pilih destinasi sebelum memulai pengalaman photobooth Anda bersama DigiOH.
           </p>
           <div className="landingActions">
             <button
               type="button"
               className="landingButton secondary"
-              onClick={() => window.open(BYTEPLUS_URL, '_blank', 'noopener,noreferrer')}
+              onClick={() => window.open(digioh_URL, '_blank', 'noopener,noreferrer')}
             >
               <span className="icon">language</span>
-              WEBSITE BYTEPLUS
+              Profile DigiOH
             </button>
             <button
               type="button"
@@ -1108,16 +1103,20 @@ export default function App() {
     )
   }
 
+  const showHeader = currentPage !== 'camera'
+
   return (
     <>
       {/* Header dengan Logo dan Nama Aplikasi */}
-      <header className="appHeader">
-        <div className="logoContainer">
-          <img src="/DIGIOH_Logomark.svg" alt="digiSelfie AI" className="appLogo" />
-          <h1 className="appTitle">digiSelfie AI</h1>
-        </div>
-      </header>
-      <main>
+      {showHeader && (
+        <header className="appHeader">
+          <div className="logoContainer">
+            <img src="/DIGIOH_Logomark.svg" alt="digiSelfie AI" className="appLogo" />
+            <h1 className="appTitle">digiSelfie AI</h1>
+          </div>
+        </header>
+      )}
+      <main style={showHeader ? {} : {paddingTop: 0}}>
         {/* Navigation Header */}
         {currentPage === 'results' && (
           <div className="pageHeader">
@@ -1210,30 +1209,44 @@ export default function App() {
             </div>
             
             <div className="previewBody">
-              <div className="photoPreview">
-                <img src={lastPhoto} alt="Foto Anda" className="previewImage" />
-                <img
-                  src={WATERMARK_OVERLAY_SRC}
-                  alt=""
-                  className="watermarkOverlay previewWatermark"
-                  aria-hidden="true"
-                />
-                <div className="photoOverlay">
-                  <div className="photoStatus">
-                    {(isProcessingPhoto || photos.find(p => p.id === currentPhotoId)?.isBusy) ? (
-                      <div className="processingStatus">
-                        <div className="spinner"></div>
-                        <p>Foto Anda sedang diproses dengan AI.</p>
+              {( () => {
+                const isPreviewPortrait =
+                  lastPhotoMeta && lastPhotoMeta.height >= lastPhotoMeta.width
+                const photoStyle = isPreviewPortrait
+                  ? {maxWidth: 'min(70vw, 380px)', maxHeight: 'min(82vh, 760px)'}
+                  : {maxWidth: 'min(90vw, 640px)', maxHeight: 'min(75vh, 520px)'}
+                return (
+                  <div className="photoPreview" style={photoStyle}>
+                    <img
+                      src={lastPhoto}
+                      alt="Foto Anda"
+                      className="previewImage"
+                      style={photoStyle}
+                    />
+                    <img
+                      src={WATERMARK_OVERLAY_SRC}
+                      alt=""
+                      className="watermarkOverlay previewWatermark"
+                      aria-hidden="true"
+                    />
+                    <div className="photoOverlay">
+                      <div className="photoStatus">
+                        {(isProcessingPhoto || photos.find(p => p.id === currentPhotoId)?.isBusy) ? (
+                          <div className="processingStatus">
+                            <div className="spinner"></div>
+                            <p>Foto Anda sedang diproses dengan AI.</p>
+                          </div>
+                        ) : (
+                          <div className="readyStatus">
+                            <span className="icon">check_circle</span>
+                            <p>Foto siap diproses!</p>
+                          </div>
+                        )}
                       </div>
-                    ) : (
-                      <div className="readyStatus">
-                        <span className="icon">check_circle</span>
-                        <p>Foto siap diproses!</p>
-                      </div>
-                    )}
+                    </div>
                   </div>
-                </div>
-              </div>
+                )
+              })()}
               
               <div className="previewActions">
                 <button 
@@ -1284,6 +1297,15 @@ export default function App() {
       {currentPage === 'camera' && (
         <>
           {/* Canvas 1: Kamera */}
+          {!showLandingScreen && (
+            <div className="cameraLogoBar">
+              <img src="/DIGIOH_Logomark.png" alt="digiSelfie AI" />
+              <div className="cameraLogoText">
+                <span className="cameraLogoName">digiSelfie</span>
+                <span className="cameraLogoAccent">AI</span>
+              </div>
+            </div>
+          )}
           <div
             className={c('camera', {portraitMode: isPortraitCapture})}
             style={cameraStyle}
@@ -1356,6 +1378,7 @@ export default function App() {
           playsInline
           disablePictureInPicture={true}
           className="cameraVideo"
+          style={{objectFit: isPortraitCapture ? 'cover' : 'contain'}}
         />
         {videoActive && (
           <img
@@ -1452,6 +1475,21 @@ export default function App() {
         {didJustSnap && <div className="flash" />}
             {videoActive && (
               <>
+                <button
+                  type="button"
+                  className="orientationToggle"
+                  onClick={e => {
+                    e.stopPropagation()
+                    toggleOrientation()
+                  }}
+                  aria-label={isPortraitCapture ? 'Switch to landscape' : 'Switch to portrait'}
+                  title={isPortraitCapture ? 'Portrait 9:16 · ketuk untuk ubah' : 'Landscape 16:9 · ketuk untuk ubah'}
+                >
+                  <span className="icon">screen_rotation</span>
+                  <span className="orientationLabel">
+                    Switch orientation
+                  </span>
+                </button>
                 {/* Mobile Mode Selector - Hidden on Desktop */}
                 <div className="mobileModeContainer">
                   <button
@@ -1512,48 +1550,37 @@ export default function App() {
       {currentPage === 'results' && currentPhotoId && (
         <div className="resultsPage">
           <div className="photoResult">
-            <div className={c('photoComparison', {isMobileResults})}>
-              {isMobileResults ? (
-                <>
-                  <div className="resultTabs" role="tablist" aria-label="Hasil foto dan GIF">
-                    {RESULT_TAB_OPTIONS.map(({key, label, icon}) => {
-                      const isActive = activeResultTab === key
-                      const isAi = key === 'ai'
-                      const isBusy = isAi ? currentPhoto?.isBusy : gifInProgress || !gifUrl
-                      return (
-                        <button
-                          key={key}
-                          type="button"
-                          id={`result-tab-${key}`}
-                          className={c('resultTabButton', {active: isActive})}
-                          onClick={() => setActiveResultTab(key)}
-                          role="tab"
-                          aria-selected={isActive}
-                          aria-controls="result-panel"
-                          tabIndex={isActive ? 0 : -1}
-                        >
-                          <span className="icon">{icon}</span>
-                          <span className="resultTabLabel">{label}</span>
-                          {isBusy && <span className="resultTabStatus">Loading</span>}
-                        </button>
-                      )
-                    })}
-                  </div>
-                  <div
-                    className="resultPanel"
-                    role="tabpanel"
-                    id="result-panel"
-                    aria-labelledby={`result-tab-${activeResultTab}`}
+            <div className="resultTabs" role="tablist" aria-label="Hasil foto dan GIF">
+              {RESULT_TAB_OPTIONS.map(({key, label, icon}) => {
+                const isActive = activeResultTab === key
+                const isAi = key === 'ai'
+                const isBusy = isAi ? currentPhoto?.isBusy : gifInProgress || !gifUrl
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    id={`result-tab-${key}`}
+                    className={c('resultTabButton', {active: isActive})}
+                    onClick={() => setActiveResultTab(key)}
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-controls="result-panel"
+                    tabIndex={isActive ? 0 : -1}
                   >
-                    {renderResultSection(activeResultTab)}
-                  </div>
-                </>
-              ) : (
-                <>
-                  {renderResultSection('ai')}
-                  {renderResultSection('gif')}
-                </>
-              )}
+                    <span className="icon">{icon}</span>
+                    <span className="resultTabLabel">{label}</span>
+                    {isBusy && <span className="resultTabStatus">Loading</span>}
+                  </button>
+                )
+              })}
+            </div>
+            <div
+              className="resultPanel"
+              role="tabpanel"
+              id="result-panel"
+              aria-labelledby={`result-tab-${activeResultTab}`}
+            >
+              {renderResultSection(activeResultTab)}
             </div>
             {/* 3 Tombol Utama: Download GIF | Download Foto | Selesai */}
             <div className="resultsActions">

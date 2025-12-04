@@ -1,0 +1,1747 @@
+/* Results page layout */
+main:has(.resultsPage) {
+  display: block;
+}
+
+/* Override grid layout for results page */
+.resultsPage {
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+}
+
+/* Force full width for results page */
+.resultsPage {
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
+}
+
+/* Ensure results page takes full width */
+.resultsPage .photoResult {
+  width: 100%;
+  max-width: 100%;
+}
+@media (max-aspect-ratio: 3/4) {
+  .resultsPage {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    height: 100vh;
+    width: 100%;
+    padding: clamp(16px, 4vh, 32px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  text-align: center;
+    gap: clamp(16px, 4vh, 32px);
+    overflow: hidden;
+  }
+
+  .resultsPage .pageHeader {
+    display: none !important;
+  }
+
+  .photoResult {
+    margin-top: 0 !important;
+    flex: 1;
+    width: 100%;
+    max-width: 720px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(16px, 4vh, 28px);
+  }
+
+  .resultsPage .photoComparison,
+  .photoResult .photoComparison {
+    flex: 1;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: clamp(12px, 3vh, 20px);
+  }
+
+  .resultsPage .photoSide,
+  .photoResult .photoSide {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  text-align: center;
+    justify-content: flex-start;
+    gap: clamp(8px, 2vh, 12px);
+    min-height: 0;
+  }
+
+  .resultsPage .photoSide img,
+  .photoResult .photoSide img {
+    flex: 1;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    object-fit: contain !important;
+    background: rgba(0, 0, 0, 0.12);
+  }
+
+  .resultsPage .loadingPlaceholder {
+    flex: 1;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+  }
+
+  .resultsActions,
+  .resultActions {
+    margin-top: auto;
+    display: grid;
+    width: 100%;
+    max-width: 720px;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .resultsActions .btn,
+  .resultsActions .btnPrimary,
+  .resultsActions .btnSecondary,
+  .resultActions .btn {
+    width: 100%;
+    min-height: 56px;
+    font-size: 1rem;
+  }
+}
+
+/* Override main padding for results page */
+main:has(.resultsPage) {
+  padding: 0;
+}
+
+/* Ensure results page container takes full width */
+.resultsPage {
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  width: 100vw;
+  max-width: 100vw;
+}
+
+/* Override the duplicate resultsPage styles */
+.resultsPage {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  margin: 0 !important;
+  padding: 20px !important;
+  animation: fadeInUp 0.6s ease-out;
+  margin-left: calc(-50vw + 50%) !important;
+  margin-right: calc(-50vw + 50%) !important;
+}
+
+/* Ensure photoResult takes full width */
+.resultsPage .photoResult {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+}
+
+/* Ensure photoComparison takes full width */
+.resultsPage .photoComparison {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Ensure photoSide takes full width */
+.resultsPage .photoSide {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Ensure photoSide img takes full width */
+.resultsPage .photoSide img {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Ensure loadingPlaceholder takes full width */
+.resultsPage .loadingPlaceholder {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Ensure resultActions takes full width */
+.resultsPage .resultActions, .resultsPage .resultsActions {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Ensure gifSection takes full width */
+.resultsPage .gifSection {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Ensure pageHeader takes full width */
+.resultsPage .pageHeader {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Ensure all elements in results page take full width */
+.resultsPage * {
+  box-sizing: border-box;
+}
+
+/* Override any max-width constraints */
+.resultsPage .photoSide img {
+  max-width: none !important;
+}
+
+.resultsPage .loadingPlaceholder {
+  max-width: none !important;
+}
+
+/* Force full width for all results page elements */
+.resultsPage .photoSide {
+  flex: 1;
+  min-width: 0;
+}
+
+.resultsPage .photoComparison {
+  display: flex !important;
+  gap: 20px;
+  width: 100% !important;
+}
+
+/* Ensure images fill their containers */
+.resultsPage .photoSide img,
+.resultsPage .loadingPlaceholder {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 400px;
+  object-fit: contain;
+}
+
+/* Override responsive breakpoints for results page */
+@media (max-width: 768px) {
+  .resultsPage .photoComparison {
+    flex-direction: column !important;
+  }
+  
+  .resultsPage .photoSide img,
+  .resultsPage .loadingPlaceholder {
+    min-height: 300px;
+  }
+}
+
+/* Final override to ensure full width */
+.resultsPage {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 10 !important;
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%) !important;
+  overflow-y: auto !important;
+}
+
+/* Ensure photoResult takes full height */
+.resultsPage .photoResult {
+  min-height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+/* Ensure photoComparison takes full width and height */
+.resultsPage .photoComparison {
+  flex: 1 !important;
+  display: flex !important;
+  gap: 20px !important;
+  width: 100% !important;
+  height: 100% !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Ensure photoSide takes equal width */
+.resultsPage .photoSide {
+  flex: 1 !important;
+  min-width: 0 !important;
+  max-width: 50% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Ensure images fill their containers properly */
+.resultsPage .photoSide img,
+.resultsPage .loadingPlaceholder {
+  width: 100% !important;
+  height: 60vh !important;
+  min-height: 400px !important;
+  max-height: 600px !important;
+  object-fit: cover !important;
+  border-radius: 15px !important;
+}
+
+/* Ensure resultActions and gifSection are properly positioned */
+.resultsPage .resultActions, .resultsPage .resultsActions,
+.resultsPage .gifSection {
+  flex-shrink: 0 !important;
+  margin-top: 20px !important;
+}
+
+/* Override responsive design for results page */
+@media (max-width: 768px) {
+  .resultsPage .photoComparison {
+    flex-direction: column !important;
+    height: auto !important;
+  }
+  
+  .resultsPage .photoSide {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  
+  .resultsPage .photoSide img,
+  .resultsPage .loadingPlaceholder {
+    height: 40vh !important;
+    min-height: 300px !important;
+    max-height: 400px !important;
+  }
+}
+
+/* Final cleanup - remove any conflicting styles */
+.resultsPage .photoResult {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 20px !important;
+}
+
+/* Ensure pageHeader is properly positioned */
+.resultsPage .pageHeader {
+  position: fixed !important;
+  top: 20px !important;
+  left: 20px !important;
+  right: 20px !important;
+  z-index: 11 !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 10px !important;
+  padding: 15px 20px !important;
+}
+
+/* Mobile pageHeader adjustments */
+@media (max-width: 768px) {
+  .resultsPage .pageHeader {
+    top: 5px !important;
+    left: 10px !important;
+    right: 10px !important;
+    padding: 8px 12px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .resultsPage .pageHeader {
+    top: 3px !important;
+    left: 8px !important;
+    right: 8px !important;
+    padding: 6px 10px !important;
+  }
+}
+
+@media (max-width: 320px) {
+  .resultsPage .pageHeader {
+    top: 2px !important;
+    left: 6px !important;
+    right: 6px !important;
+    padding: 5px 8px !important;
+  }
+}
+
+/* Ensure photoResult has proper top margin to account for fixed header */
+.resultsPage .photoResult {
+  margin-top: 80px !important;
+}
+
+/* Mobile results page adjustments */
+@media (max-width: 768px) {
+  .resultsPage .photoResult {
+    margin-top: 70px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .resultsPage .photoResult {
+    margin-top: 65px !important;
+  }
+}
+
+@media (max-width: 320px) {
+  .resultsPage .photoResult {
+    margin-top: 60px !important;
+  }
+}
+
+/* Final responsive adjustments */
+@media (max-width: 768px) {
+  .resultsPage .pageHeader {
+    top: 5px !important;
+    left: 10px !important;
+    right: 10px !important;
+    padding: 8px 12px !important;
+  }
+  
+  .resultsPage .photoResult {
+    margin-top: 60px !important;
+  }
+}
+
+/* Ensure all text is readable */
+.resultsPage h3 {
+  color: white !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+}
+
+.resultsPage .pageTitle {
+  color: white !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Final override to ensure everything works */
+.resultsPage {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 10 !important;
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%) !important;
+  overflow-y: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Ensure photoResult takes full height and centers content */
+.resultsPage .photoResult {
+  min-height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 20px !important;
+  margin-top: 0 !important;
+}
+
+/* Ensure photoComparison takes full width and centers content */
+.resultsPage .photoComparison {
+  width: 100% !important;
+  max-width: 1200px !important;
+  display: flex !important;
+  gap: 20px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 20px !important;
+}
+
+/* Ensure photoSide takes equal width */
+.resultsPage .photoSide {
+  flex: 1 !important;
+  min-width: 0 !important;
+  max-width: 50% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Ensure images are properly sized */
+.resultsPage .photoSide img,
+.resultsPage .loadingPlaceholder {
+  width: 100% !important;
+  height: 60vh !important;
+  min-height: 400px !important;
+  max-height: 600px !important;
+  object-fit: cover !important;
+  border-radius: 15px !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Ensure resultActions and gifSection are properly positioned */
+.resultsPage .resultActions, .resultsPage .resultsActions,
+.resultsPage .gifSection {
+  width: 100% !important;
+  max-width: 1200px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin-top: 20px !important;
+}
+
+/* Final responsive adjustments for results page */
+@media (max-width: 768px) {
+  .resultsPage .photoComparison {
+    flex-direction: column !important;
+    gap: 15px !important;
+  }
+  
+  .resultsPage .photoSide {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  
+  .resultsPage .photoSide img,
+  .resultsPage .loadingPlaceholder {
+    height: 40vh !important;
+    min-height: 300px !important;
+    max-height: 400px !important;
+  }
+  
+  .resultsPage .resultActions, .resultsPage .resultsActions {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+}
+
+/* Ensure pageHeader is properly positioned and styled */
+.resultsPage .pageHeader {
+  position: fixed !important;
+  top: 20px !important;
+  left: 20px !important;
+  right: 20px !important;
+  z-index: 11 !important;
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 10px !important;
+  padding: 15px 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+/* Ensure pageTitle is properly styled */
+.resultsPage .pageTitle {
+  color: white !important;
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+  margin: 0 !important;
+}
+
+/* Ensure backButton is properly styled */
+.resultsPage .backButton {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  padding: 10px 20px !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.resultsPage .backButton:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Final mobile adjustments for pageHeader */
+@media (max-width: 768px) {
+  .resultsPage .pageHeader {
+    top: 10px !important;
+    left: 10px !important;
+    right: 10px !important;
+    padding: 10px 15px !important;
+  }
+  
+  .resultsPage .pageTitle {
+    font-size: 1.2rem !important;
+  }
+  
+  .resultsPage .backButton {
+    padding: 8px 15px !important;
+    font-size: 0.9rem !important;
+  }
+}
+
+/* Ensure all text in results page is readable */
+.resultsPage h3 {
+  color: white !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+  font-size: 1.2rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 15px !important;
+}
+
+.resultsPage p {
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Final cleanup - remove any duplicate or conflicting styles */
+.resultsPage .photoResult {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 20px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Ensure the results page is properly centered and takes full viewport */
+.resultsPage {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 10 !important;
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%) !important;
+  overflow-y: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Ensure photoResult takes full width and centers content */
+.resultsPage .photoResult {
+  width: 100% !important;
+  max-width: 1200px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+  margin: 0 !important;
+}
+
+/* Ensure photoComparison takes full width and centers content */
+.resultsPage .photoComparison {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: flex !important;
+  gap: 20px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 20px !important;
+}
+
+/* Ensure photoSide takes equal width */
+.resultsPage .photoSide {
+  flex: 1 !important;
+  min-width: 0 !important;
+  max-width: 50% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Ensure images are properly sized */
+.resultsPage .photoSide img,
+.resultsPage .loadingPlaceholder {
+  width: 100% !important;
+  height: 60vh !important;
+  min-height: 400px !important;
+  max-height: 600px !important;
+  object-fit: cover !important;
+  border-radius: 15px !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Ensure resultActions and gifSection are properly positioned */
+.resultsPage .resultActions, .resultsPage .resultsActions,
+.resultsPage .gifSection {
+  width: 100% !important;
+  max-width: 1200px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin-top: 20px !important;
+}
+
+/* Final responsive adjustments for results page */
+@media (max-width: 768px) {
+  .resultsPage .photoComparison {
+    flex-direction: column !important;
+    gap: 15px !important;
+  }
+  
+  .resultsPage .photoSide {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  
+  .resultsPage .photoSide img,
+  .resultsPage .loadingPlaceholder {
+    height: 40vh !important;
+    min-height: 300px !important;
+    max-height: 400px !important;
+  }
+  
+  .resultsPage .resultActions, .resultsPage .resultsActions {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+}
+
+/* Ensure pageHeader is properly positioned and styled */
+.resultsPage .pageHeader {
+  position: fixed !important;
+  top: 20px !important;
+  left: 20px !important;
+  right: 20px !important;
+  z-index: 11 !important;
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 10px !important;
+  padding: 15px 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+/* Ensure pageTitle is properly styled */
+.resultsPage .pageTitle {
+  color: white !important;
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+  margin: 0 !important;
+}
+
+/* Ensure backButton is properly styled */
+.resultsPage .backButton {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  padding: 10px 20px !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.resultsPage .backButton:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Final mobile adjustments for pageHeader */
+@media (max-width: 768px) {
+  .resultsPage .pageHeader {
+    top: 10px !important;
+    left: 10px !important;
+    right: 10px !important;
+    padding: 10px 15px !important;
+  }
+  
+  .resultsPage .pageTitle {
+    font-size: 1.2rem !important;
+  }
+  
+  .resultsPage .backButton {
+    padding: 8px 15px !important;
+    font-size: 0.9rem !important;
+  }
+}
+
+/* Ensure all text in results page is readable */
+.resultsPage h3 {
+  color: white !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+  font-size: 1.2rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 15px !important;
+}
+
+.resultsPage p {
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Final cleanup - remove any duplicate or conflicting styles */
+.resultsPage .photoResult {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 20px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Ensure the results page is properly centered and takes full viewport */
+.resultsPage {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 10 !important;
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%) !important;
+  overflow-y: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Ensure photoResult takes full width and centers content */
+.resultsPage .photoResult {
+  width: 100% !important;
+  max-width: 1200px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+  margin: 0 !important;
+}
+
+/* Ensure photoComparison takes full width and centers content */
+.resultsPage .photoComparison {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: flex !important;
+  gap: 20px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 20px !important;
+}
+
+/* Ensure photoSide takes equal width */
+.resultsPage .photoSide {
+  flex: 1 !important;
+  min-width: 0 !important;
+  max-width: 50% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Ensure images are properly sized */
+.resultsPage .photoSide img,
+.resultsPage .loadingPlaceholder {
+  width: 100% !important;
+  height: 60vh !important;
+  min-height: 400px !important;
+  max-height: 600px !important;
+  object-fit: cover !important;
+  border-radius: 15px !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Ensure resultActions and gifSection are properly positioned */
+.resultsPage .resultActions, .resultsPage .resultsActions,
+.resultsPage .gifSection {
+  width: 100% !important;
+  max-width: 1200px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin-top: 20px !important;
+}
+
+/* Final responsive adjustments for results page */
+@media (max-width: 768px) {
+  .resultsPage .photoComparison {
+    flex-direction: column !important;
+    gap: 15px !important;
+  }
+  
+  .resultsPage .photoSide {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  
+  .resultsPage .photoSide img,
+  .resultsPage .loadingPlaceholder {
+    height: 40vh !important;
+    min-height: 300px !important;
+    max-height: 400px !important;
+  }
+  
+  .resultsPage .resultActions, .resultsPage .resultsActions {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+}
+
+/* Ensure pageHeader is properly positioned and styled */
+.resultsPage .pageHeader {
+  position: fixed !important;
+  top: 20px !important;
+  left: 20px !important;
+  right: 20px !important;
+  z-index: 11 !important;
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 10px !important;
+  padding: 15px 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+/* Ensure pageTitle is properly styled */
+.resultsPage .pageTitle {
+  color: white !important;
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+  margin: 0 !important;
+}
+
+/* Ensure backButton is properly styled */
+.resultsPage .backButton {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  padding: 10px 20px !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.resultsPage .backButton:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Final mobile adjustments for pageHeader */
+@media (max-width: 768px) {
+  .resultsPage .pageHeader {
+    top: 10px !important;
+    left: 10px !important;
+    right: 10px !important;
+    padding: 10px 15px !important;
+  }
+  
+  .resultsPage .pageTitle {
+    font-size: 1.2rem !important;
+  }
+  
+  .resultsPage .backButton {
+    padding: 8px 15px !important;
+    font-size: 0.9rem !important;
+  }
+}
+
+/* Ensure all text in results page is readable */
+.resultsPage h3 {
+  color: white !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+  font-size: 1.2rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 15px !important;
+}
+
+.resultsPage p {
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Final cleanup - remove any duplicate or conflicting styles */
+.resultsPage .photoResult {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 20px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Ensure the results page is properly centered and takes full viewport */
+.resultsPage {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 10 !important;
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%) !important;
+  overflow-y: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Ensure photoResult takes full width and centers content */
+.resultsPage .photoResult {
+  width: 100% !important;
+  max-width: 1200px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+  margin: 0 !important;
+}
+
+/* Ensure photoComparison takes full width and centers content */
+.resultsPage .photoComparison {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: flex !important;
+  gap: 20px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 20px !important;
+}
+
+/* Ensure photoSide takes equal width */
+.resultsPage .photoSide {
+  flex: 1 !important;
+  min-width: 0 !important;
+  max-width: 50% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Ensure images are properly sized */
+.resultsPage .photoSide img,
+.resultsPage .loadingPlaceholder {
+  width: 100% !important;
+  height: 60vh !important;
+  min-height: 400px !important;
+  max-height: 600px !important;
+  object-fit: cover !important;
+  border-radius: 15px !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Ensure resultActions and gifSection are properly positioned */
+.resultsPage .resultActions, .resultsPage .resultsActions,
+.resultsPage .gifSection {
+  width: 100% !important;
+  max-width: 1200px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin-top: 20px !important;
+}
+
+/* Final responsive adjustments for results page */
+@media (max-width: 768px) {
+  .resultsPage .photoComparison {
+    flex-direction: column !important;
+    gap: 15px !important;
+  }
+  
+  .resultsPage .photoSide {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  
+  .resultsPage .photoSide img,
+  .resultsPage .loadingPlaceholder {
+    height: 40vh !important;
+    min-height: 300px !important;
+    max-height: 400px !important;
+  }
+  
+  .resultsPage .resultActions, .resultsPage .resultsActions {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+}
+
+/* Ensure pageHeader is properly positioned and styled */
+.resultsPage .pageHeader {
+  position: fixed !important;
+  top: 20px !important;
+  left: 20px !important;
+  right: 20px !important;
+  z-index: 11 !important;
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 10px !important;
+  padding: 15px 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+/* Ensure pageTitle is properly styled */
+.resultsPage .pageTitle {
+  color: white !important;
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+  margin: 0 !important;
+}
+
+/* Ensure backButton is properly styled */
+.resultsPage .backButton {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  padding: 10px 20px !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.resultsPage .backButton:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Final mobile adjustments for pageHeader */
+@media (max-width: 768px) {
+  .resultsPage .pageHeader {
+    top: 10px !important;
+    left: 10px !important;
+    right: 10px !important;
+    padding: 10px 15px !important;
+  }
+  
+  .resultsPage .pageTitle {
+    font-size: 1.2rem !important;
+  }
+  
+  .resultsPage .backButton {
+    padding: 8px 15px !important;
+    font-size: 0.9rem !important;
+  }
+}
+
+/* Ensure all text in results page is readable */
+.resultsPage h3 {
+  color: white !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+  font-size: 1.2rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 15px !important;
+}
+
+.resultsPage p {
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Final cleanup - remove any duplicate or conflicting styles */
+.resultsPage .photoResult {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 20px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Ensure the results page is properly centered and takes full viewport */
+.resultsPage {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 10 !important;
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%) !important;
+  overflow-y: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Ensure photoResult takes full width and centers content */
+.resultsPage .photoResult {
+  width: 100% !important;
+  max-width: 1200px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+  margin: 0 !important;
+}
+
+/* Ensure photoComparison takes full width and centers content */
+.resultsPage .photoComparison {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: flex !important;
+  gap: 20px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 20px !important;
+}
+
+/* Ensure photoSide takes equal width */
+.resultsPage .photoSide {
+  flex: 1 !important;
+  min-width: 0 !important;
+  max-width: 50% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Ensure images are properly sized */
+.resultsPage .photoSide img,
+.resultsPage .loadingPlaceholder {
+  width: 100% !important;
+  height: 60vh !important;
+  min-height: 400px !important;
+  max-height: 600px !important;
+  object-fit: cover !important;
+  border-radius: 15px !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Ensure resultActions and gifSection are properly positioned */
+.resultsPage .resultActions, .resultsPage .resultsActions,
+.resultsPage .gifSection {
+  width: 100% !important;
+  max-width: 1200px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin-top: 20px !important;
+}
+
+/* Final responsive adjustments for results page */
+@media (max-width: 768px) {
+  .resultsPage .photoComparison {
+    flex-direction: column !important;
+    gap: 15px !important;
+  }
+  
+  .resultsPage .photoSide {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  
+  .resultsPage .photoSide img,
+  .resultsPage .loadingPlaceholder {
+    height: 40vh !important;
+    min-height: 300px !important;
+    max-height: 400px !important;
+  }
+  
+  .resultsPage .resultActions, .resultsPage .resultsActions {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+}
+
+/* Ensure pageHeader is properly positioned and styled */
+.resultsPage .pageHeader {
+  position: fixed !important;
+  top: 20px !important;
+  left: 20px !important;
+  right: 20px !important;
+  z-index: 11 !important;
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 10px !important;
+  padding: 15px 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+/* Ensure pageTitle is properly styled */
+.resultsPage .pageTitle {
+  color: white !important;
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+  margin: 0 !important;
+}
+
+/* Ensure backButton is properly styled */
+.resultsPage .backButton {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  padding: 10px 20px !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.resultsPage .backButton:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Final mobile adjustments for pageHeader */
+@media (max-width: 768px) {
+  .resultsPage .pageHeader {
+    top: 10px !important;
+    left: 10px !important;
+    right: 10px !important;
+    padding: 10px 15px !important;
+  }
+  
+  .resultsPage .pageTitle {
+    font-size: 1.2rem !important;
+  }
+  
+  .resultsPage .backButton {
+    padding: 8px 15px !important;
+    font-size: 0.9rem !important;
+  }
+}
+
+/* Ensure all text in results page is readable */
+.resultsPage h3 {
+  color: white !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+  font-size: 1.2rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 15px !important;
+}
+
+.resultsPage p {
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Final cleanup - remove any duplicate or conflicting styles */
+.resultsPage .photoResult {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 20px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Ensure the results page is properly centered and takes full viewport */
+.resultsPage {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 10 !important;
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%) !important;
+  overflow-y: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Ensure photoResult takes full width and centers content */
+.resultsPage .photoResult {
+  width: 100% !important;
+  max-width: 1200px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+  margin: 0 !important;
+}
+
+/* Ensure photoComparison takes full width and centers content */
+.resultsPage .photoComparison {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: flex !important;
+  gap: 20px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 20px !important;
+}
+
+/* Ensure photoSide takes equal width */
+.resultsPage .photoSide {
+  flex: 1 !important;
+  min-width: 0 !important;
+  max-width: 50% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Ensure images are properly sized */
+.resultsPage .photoSide img,
+.resultsPage .loadingPlaceholder {
+  width: 100% !important;
+  height: 60vh !important;
+  min-height: 400px !important;
+  max-height: 600px !important;
+  object-fit: cover !important;
+  border-radius: 15px !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Ensure resultActions and gifSection are properly positioned */
+.resultsPage .resultActions, .resultsPage .resultsActions,
+.resultsPage .gifSection {
+  width: 100% !important;
+  max-width: 1200px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin-top: 20px !important;
+}
+
+/* Final responsive adjustments for results page */
+@media (max-width: 768px) {
+  .resultsPage .photoComparison {
+    flex-direction: column !important;
+    gap: 15px !important;
+  }
+  
+  .resultsPage .photoSide {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  
+  .resultsPage .photoSide img,
+  .resultsPage .loadingPlaceholder {
+    height: 40vh !important;
+    min-height: 300px !important;
+    max-height: 400px !important;
+  }
+  
+  .resultsPage .resultActions, .resultsPage .resultsActions {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+}
+
+/* Ensure pageHeader is properly positioned and styled */
+.resultsPage .pageHeader {
+  position: fixed !important;
+  top: 20px !important;
+  left: 20px !important;
+  right: 20px !important;
+  z-index: 11 !important;
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 10px !important;
+  padding: 15px 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+/* Ensure pageTitle is properly styled */
+.resultsPage .pageTitle {
+  color: white !important;
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+  margin: 0 !important;
+}
+
+/* Ensure backButton is properly styled */
+.resultsPage .backButton {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  padding: 10px 20px !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.resultsPage .backButton:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+main .canvasSection:first-child {
+  margin-bottom: 0;
+}
+
+.canvasSection {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.5rem, 1vw, 1rem);
+  width: 100%;
+  height: 100%;
+}
+
+.canvasSection:first-child {
+  gap: 0;
+}
+
+.canvasTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+  color: #fff;
+  text-align: center;
+  padding: 8px 16px;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.camera {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  margin: 0;
+  width: 100%;
+  max-width: var(--layout-max-width);
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  background: #0f172a;
+  box-shadow:
+    0 24px 48px rgba(14, 116, 144, 0.18),
+    inset 0 0 40px rgba(14, 165, 233, 0.08);
+  display: block;
+  text-align: center;
+  isolation: isolate;
+}
+
+.cameraModeSelector {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.cameraModeHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.cameraModeTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+  text-shadow: none;
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.35), rgba(56, 189, 248, 0.4));
+  backdrop-filter: blur(10px);
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(14, 116, 144, 0.45);
+}
+
+.cameraModeToggle {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.38), rgba(56, 189, 248, 0.45));
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(14, 165, 233, 0.6);
+  border-radius: 25px;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(14, 116, 144, 0.2);
+  text-shadow: none;
+}
+
+.cameraModeToggle:hover {
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.95), rgba(56, 189, 248, 0.95));
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(14, 116, 144, 0.25);
+  border-color: rgba(14, 165, 233, 0.75);
+  color: #0f172a;
+}
+
+.cameraModeGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 16px 36px rgba(14, 116, 144, 0.18);
+  min-width: 300px;
+}
+
+.cameraModeButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px;
+  background: rgba(14, 165, 233, 0.12);
+  border: 2px solid rgba(14, 116, 144, 0.25);
+  border-radius: 8px;
+  color: #0f172a;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 60px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  text-shadow: none;
+  box-shadow: 0 6px 14px rgba(14, 116, 144, 0.18);
+}
+
+.cameraModeButton:hover {
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.85), rgba(56, 189, 248, 0.9));
+  border-color: rgba(14, 165, 233, 0.75);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(14, 116, 144, 0.22);
+  color: #0f172a;
+}
+
+.cameraModeButton.active {
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.95), rgba(56, 189, 248, 0.95));
+  border-color: rgba(14, 116, 144, 0.8);
+  box-shadow: 0 12px 26px rgba(14, 116, 144, 0.3);
+  color: #0f172a;
+}
+
+.cameraModeButton span {
+  font-size: 20px;
+}
+
+.cameraModeButton p {
+  font-size: 10px;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+}
+
+.cameraPreview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  overflow: hidden;
+  background: #000;
+}
+
+.cameraPreview video {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+  object-fit: cover;
+  transform-origin: center;
+  transform: rotateY(180deg);
+  box-shadow: none;
+}
+
+.cameraPreview.portraitMode video {
+  transform: rotateY(180deg) rotate(90deg);
+}
+
+.cameraPreview.portraitMode .cameraWatermark {
+  transform: rotate(90deg);
+  transform-origin: center;
+}
+
+.watermarkOverlay {
+  position: absolute;
+  bottom: clamp(12px, 5%, 24px);
+  right: clamp(12px, 5%, 24px);
+  width: clamp(120px, 18%, 210px);
+  opacity: 0.75;
+  pointer-events: none;
+  user-select: none;
+  z-index: 2;
+  transition: opacity 0.2s ease;
+}
+
+.cameraWatermark {
+  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.35));
+}
+
+.previewWatermark {
+  bottom: clamp(10px, 4%, 18px);
+  right: clamp(10px, 4%, 18px);
+  width: clamp(60px, 28%, 170px);
+  opacity: 0.82;
+}
+
