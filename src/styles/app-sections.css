@@ -883,6 +883,44 @@
   }
 }
 
+/* Desktop mode selector - visible over camera */
+.cameraModeSelector {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: calc(100% - 32px);
+  z-index: 5;
+}
+
+.cameraModeHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+
+.cameraModeTitle {
+  display: none;
+}
+
+.cameraModeToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(11, 16, 36, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
 /* Mobile responsive adjustments for desktopModeContent - PORTRAIT LAYOUT */
 @media (max-width: 768px) {
   .desktopModeOverlay {
@@ -2901,6 +2939,30 @@
   width: auto;
 }
 
+.watermarkOverlay {
+  position: absolute;
+  bottom: clamp(10px, 4%, 18px);
+  right: clamp(10px, 4%, 18px);
+  width: clamp(90px, 28%, 220px);
+  opacity: 0.82;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.35));
+}
+
+.previewWatermark {
+  width: clamp(80px, 26%, 200px);
+}
+
+.cameraWatermark {
+  width: clamp(110px, 30%, 240px);
+  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.35));
+}
+
+.camera.portraitMode .cameraWatermark {
+  width: clamp(100px, 34%, 210px);
+}
+
 .previewImage {
   display: block;
   width: auto;
@@ -3500,12 +3562,13 @@
   display: flex;
   align-items: center;
   text-align: center;
-  justify-content: center;
-  padding: 20px;
-  background: linear-gradient(135deg, rgba(207, 250, 254, 0.95) 0%, rgba(134, 239, 172, 0.95) 50%, rgba(56, 189, 248, 0.95) 100%);
-  border-radius: 15px;
-  margin-bottom: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: transparent;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border: none;
   animation: fadeInUp 0.6s ease-out;
 }
 
@@ -3515,29 +3578,45 @@
   text-align: center;
   gap: 8px;
   padding: 12px 20px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
+  background: linear-gradient(135deg, #5b5cf6, #8b5cf6);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
   color: #fff;
   font-size: 14px;
   font-weight: 600;
   transition: all 0.3s ease;
   cursor: pointer;
+  box-shadow:
+    0 12px 24px rgba(91, 92, 246, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .backButton:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateX(-2px);
+  filter: brightness(1.06);
+  transform: translateY(-1px);
 }
 
 .pageTitle {
   font-size: 1.5rem;
   font-weight: 600;
   margin: 0;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899);
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.resultsHeader {
+  width: min(92vw, 1100px);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.resultsHeader .resultTabs {
+  flex: 1;
+  min-width: 0;
 }
 
 /* Unified camera layout across breakpoints */

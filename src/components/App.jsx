@@ -1,10 +1,12 @@
-/**
+﻿/**
  * @license
  * SPDX-License-Identifier: Apache-2.0
 */
 import React, {useRef, useState, useCallback, useEffect, useMemo} from 'react'
 import QRCode from 'qrcode'
 import c from 'clsx'
+import LandingScreen from './screens/LandingScreen'
+import ResultScreen from './screens/ResultScreen'
 import {
   snapPhoto,
   setMode,
@@ -178,10 +180,10 @@ export default function App() {
   const hasLoggedFallbackRef = useRef(false)
 
   useEffect(() => {
-    debugLog('🚀 App mounted')
+    debugLog('ðŸš€ App mounted')
     init()
     return () => {
-      debugLog('👋 App unmounted')
+      debugLog('ðŸ‘‹ App unmounted')
     }
   }, [])
   
@@ -189,7 +191,7 @@ export default function App() {
   
   try {
     if (!hasLoggedStoreInitRef.current) {
-      debugLog('🛠️ Attempting to load store...')
+      debugLog('ðŸ› ï¸ Attempting to load store...')
       hasLoggedStoreInitRef.current = true
     }
     photos = useStore.use.photos()
@@ -198,7 +200,7 @@ export default function App() {
     gifInProgress = useStore.use.gifInProgress()
     gifUrl = useStore.use.gifUrl()
   } catch (error) {
-    console.error('⚠️ Error loading store:', error)
+    console.error('âš ï¸ Error loading store:', error)
     // Fallback values
     photos = []
     customPrompt = ''
@@ -206,13 +208,13 @@ export default function App() {
     gifInProgress = false
     gifUrl = null
     if (!hasLoggedFallbackRef.current) {
-      debugLog('🛟 Using fallback store values')
+      debugLog('ðŸ›Ÿ Using fallback store values')
       hasLoggedFallbackRef.current = true
     }
   }
   useEffect(() => {
     if (!DEBUG_LOGS_ENABLED) return
-    debugLog('📦 Store snapshot:', {
+    debugLog('ðŸ“¦ Store snapshot:', {
       photosCount: photos.length,
       activeMode,
       customPromptLength: customPrompt.length
@@ -393,7 +395,7 @@ export default function App() {
     try {
       const readyCount = photos.filter(p => !p.isBusy).length
       if (readyCount > 0 && !gifInProgress && !gifUrl) {
-        debugLog('🎞️ Auto-creating GIF because photos are ready...')
+        debugLog('ðŸŽžï¸ Auto-creating GIF because photos are ready...')
         makeGif()
       }
     } catch (e) {
@@ -642,14 +644,14 @@ export default function App() {
     }
   }
   const uploadToStorage = async (imageUrl, filename) => {
-    debugLog('📤 Starting upload for:', filename)
-    debugLog('🔍 Image URL type:', imageUrl.startsWith('data:') ? 'Base64' : 'URL')
+    debugLog('ðŸ“¤ Starting upload for:', filename)
+    debugLog('ðŸ” Image URL type:', imageUrl.startsWith('data:') ? 'Base64' : 'URL')
     
     try {
       // Convert base64 to blob
       const response = await fetch(imageUrl)
       const blob = await response.blob()
-      debugLog('📦 Blob created, size:', blob.size)
+      debugLog('ðŸ“¦ Blob created, size:', blob.size)
       
       // Upload ke backend storage
       const formData = new FormData()
@@ -661,12 +663,12 @@ export default function App() {
         body: formData
       })
       
-      debugLog('📡 Upload response status:', uploadResponse.status)
+      debugLog('ðŸ“¡ Upload response status:', uploadResponse.status)
       
       if (uploadResponse.ok) {
         const result = await uploadResponse.json()
         if (result.success && result.directLink) {
-          debugLog('✅ Upload successful:', result.directLink)
+          debugLog('âœ… Upload successful:', result.directLink)
           return {
             url: result.directLink,
             qrCode: result.qrCode
@@ -681,8 +683,8 @@ export default function App() {
     }
   }
   const generateQRCodeFor = async (imageUrl, filename = null, cacheKey = null) => {
-    debugLog('🧾 generateQRCodeFor called:', {filename, cacheKey})
-    debugLog('🌐 Image URL for QR:', imageUrl)
+    debugLog('ðŸ§¾ generateQRCodeFor called:', {filename, cacheKey})
+    debugLog('ðŸŒ Image URL for QR:', imageUrl)
     
     const defaultFilename = filename || `digioh-photobooth-${Date.now()}.jpg`
     
@@ -731,7 +733,7 @@ export default function App() {
           }))
         }
         
-        debugLog('✅ QR Code generated with direct image URL fallback')
+        debugLog('âœ… QR Code generated with direct image URL fallback')
         
         return {
           qrCode: qrCodeDataURL,
@@ -779,7 +781,7 @@ export default function App() {
       videoRef.current.srcObject = null
     }
     
-    debugLog('🔄 Reset aplikasi untuk user berikutnya')
+    debugLog('ðŸ”„ Reset aplikasi untuk user berikutnya')
   }
   const prepareDownloadsForPhoto = useCallback(
     async (photoId, {force = false} = {}) => {
@@ -1021,7 +1023,7 @@ export default function App() {
   // Tidak ada auto-start video - user harus klik tombol "Mari Berfoto!" dulu
   useEffect(() => {
     if (!DEBUG_LOGS_ENABLED) return
-    debugLog('🧠 UI snapshot:', {
+    debugLog('ðŸ§  UI snapshot:', {
       currentPage,
       videoActive,
       showPreview,
@@ -1037,13 +1039,30 @@ export default function App() {
     : null
   const renderResultSection = section => {
     const isAi = section === 'ai'
-    const heading = isAi ? '✨ Hasil AI' : '🎞️ GIF'
+    const heading = isAi ? 'Hasil AI' : 'GIF'
     const isBusy = isAi ? currentPhoto?.isBusy : gifInProgress || !gifUrl
     const src = isAi
       ? aiPhotoSrc || (currentPhotoId ? imageData.outputs[currentPhotoId] : null)
       : gifUrl
     const alt = isAi ? 'Hasil AI' : 'Hasil GIF'
     const placeholderText = isAi ? 'Sedang memproses...' : 'GIF sedang diproses...'
+    const isPortraitDisplay =
+      lastPhotoMeta?.height && lastPhotoMeta?.width
+        ? lastPhotoMeta.height >= lastPhotoMeta.width
+        : (currentPhoto?.orientation || 'portrait') === 'portrait'
+    const aspectValue =
+      lastPhotoMeta?.aspect ||
+      (isPortraitDisplay ? PORTRAIT_ASPECT : LANDSCAPE_ASPECT)
+    const frameStyle = {
+      '--result-aspect': `${aspectValue}`,
+      width: 'min(94vw, 1200px)',
+      maxHeight: 'calc(100vh - 180px)'
+    }
+    const imageStyle = {
+      width: '100%',
+      height: '100%',
+      objectFit: 'contain'
+    }
     return (
       <div className="photoSide" key={section}>
         <h3>{heading}</h3>
@@ -1053,54 +1072,19 @@ export default function App() {
             <p>{placeholderText}</p>
           </div>
         ) : (
-          <img src={src} alt={alt} />
+          <div
+            className="resultFrame"
+            style={frameStyle}
+            aria-label={alt}
+          >
+            <img src={src} alt={alt} style={imageStyle} />
+          </div>
         )}
       </div>
     )
   }
-
   if (showLandingScreen) {
-    return (
-      <div className="landingScreen">
-        <div className="landingBackdrop landingBackdrop--left" />
-        <div className="landingBackdrop landingBackdrop--right" />
-        <div className="landingCard">
-          <div className="landingBadge">Profesional Event Experience</div>
-          <div className="landingLogo">
-            <img src="/DIGIOH_Logomark.svg" alt="digiSelfie AI" />
-            <div>
-              <p className="landingLogoTitle">digiSelfie AI</p>
-              <span>Powered by DigiOH</span>
-            </div>
-          </div>
-          <h1 className="landingTitle">
-            <span>Selamat</span>
-            <span>Datang</span>
-          </h1>
-          <p className="landingSubtitle">
-            Pilih destinasi sebelum memulai pengalaman photobooth Anda bersama DigiOH.
-          </p>
-          <div className="landingActions">
-            <button
-              type="button"
-              className="landingButton secondary"
-              onClick={() => window.open(digioh_URL, '_blank', 'noopener,noreferrer')}
-            >
-              <span className="icon">language</span>
-              Profile DigiOH
-            </button>
-            <button
-              type="button"
-              className="landingButton primary"
-              onClick={() => setShowLandingScreen(false)}
-            >
-              <span className="icon">camera_enhance</span>
-              PHOTOBOOTH AI
-            </button>
-          </div>
-        </div>
-      </div>
-    )
+    return <LandingScreen onClose={() => setShowLandingScreen(false)} digiohUrl={digioh_URL} />
   }
 
   const showHeader = currentPage !== 'camera'
@@ -1112,14 +1096,14 @@ export default function App() {
         <header className="appHeader">
           <div className="logoContainer">
             <img src="/DIGIOH_Logomark.svg" alt="digiSelfie AI" className="appLogo" />
-            <h1 className="appTitle">digiSelfie AI</h1>
+            {/* Judul dihilangkan sesuai permintaan */}
           </div>
         </header>
       )}
       <main style={showHeader ? {} : {paddingTop: 0}}>
         {/* Navigation Header */}
         {currentPage === 'results' && (
-          <div className="pageHeader">
+          <div className="pageHeader resultsHeader">
             <button 
               className="backButton"
               onClick={retakePhoto}
@@ -1127,7 +1111,30 @@ export default function App() {
               <span className="icon">arrow_back</span>
               Kembali ke Kamera
             </button>
-            <h2 className="pageTitle">? Hasil Foto Anda</h2>
+            <div className="resultTabs" role="tablist" aria-label="Hasil foto dan GIF">
+              {RESULT_TAB_OPTIONS.map(({key, label, icon}) => {
+                const isActive = activeResultTab === key
+                const isAi = key === 'ai'
+                const isBusy = isAi ? currentPhoto?.isBusy : gifInProgress || !gifUrl
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    id={`result-tab-${key}`}
+                    className={c('resultTabButton', {active: isActive})}
+                    onClick={() => setActiveResultTab(key)}
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-controls="result-panel"
+                    tabIndex={isActive ? 0 : -1}
+                  >
+                    <span className="icon">{icon}</span>
+                    <span className="resultTabLabel">{label}</span>
+                    {isBusy && <span className="resultTabStatus">Loading</span>}
+                  </button>
+                )
+              })}
+            </div>
           </div>
         )}
         {showCustomPrompt && (
@@ -1161,7 +1168,7 @@ export default function App() {
               />
               
               <div style={{marginTop: '15px', fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)'}}>
-                <p>💡 <strong>Tips:</strong></p>
+                <p>ðŸ’¡ <strong>Tips:</strong></p>
                 <ul style={{margin: '8px 0', paddingLeft: '20px'}}>
                   <li>Be specific about colors, lighting, and mood</li>
                   <li>Mention art styles like "oil painting", "watercolor", "digital art"</li>
@@ -1204,7 +1211,7 @@ export default function App() {
         }}>
           <div className="previewContent">
             <div className="previewHeader">
-              <h2 className="previewTitle">📸 Foto Anda!</h2>
+              <h2 className="previewTitle">ðŸ“¸ Foto Anda!</h2>
               <p className="previewSubtitle">Bagaimana hasilnya? Pilih aksi selanjutnya</p>
             </div>
             
@@ -1318,7 +1325,7 @@ export default function App() {
             {videoActive && (
               <div className="cameraModeSelector">
                 <div className="cameraModeHeader">
-                  <h3 className="cameraModeTitle">🎨 Pilih Mode Foto</h3>
+                  <h3 className="cameraModeTitle">ðŸŽ¨ Pilih Mode Foto</h3>
                   <button
                     className="cameraModeToggle"
                     onClick={e => {
@@ -1349,7 +1356,7 @@ export default function App() {
                         setShowCustomPrompt(true)
                       }}
                     >
-                      <span>✨</span>
+                      <span>âœ¨</span>
                       <p>Custom</p>
                     </button>
                     {Object.entries(modes).map(([key, {name, emoji, prompt}]) => (
@@ -1405,7 +1412,7 @@ export default function App() {
           >
             <div className="cameraOverlayContent">
               <div className="cameraOverlayHeading">
-                <span className="cameraOverlayIcon">📸</span>
+                <span className="cameraOverlayIcon">ðŸ“¸</span>
                 <h1>Mari Berfoto!</h1>
               </div>
               <p className="cameraOverlaySubtitle">
@@ -1483,7 +1490,7 @@ export default function App() {
                     toggleOrientation()
                   }}
                   aria-label={isPortraitCapture ? 'Switch to landscape' : 'Switch to portrait'}
-                  title={isPortraitCapture ? 'Portrait 9:16 · ketuk untuk ubah' : 'Landscape 16:9 · ketuk untuk ubah'}
+                  title={isPortraitCapture ? 'Portrait 9:16 Â· ketuk untuk ubah' : 'Landscape 16:9 Â· ketuk untuk ubah'}
                 >
                   <span className="icon">screen_rotation</span>
                   <span className="orientationLabel">
@@ -1497,7 +1504,7 @@ export default function App() {
                     onClick={() => setShowMobileModeSelector(!showMobileModeSelector)}
                   >
                     <span className="icon">palette</span>
-                    <span>🎨 {modes[activeMode]?.name || 'Custom'}</span>
+                    <span>ðŸŽ¨ {modes[activeMode]?.name || 'Custom'}</span>
                     <span className="icon">
                       {showMobileModeSelector ? 'expand_less' : 'expand_more'}
                     </span>
@@ -1521,7 +1528,7 @@ export default function App() {
                             setShowMobileModeSelector(false)
                           }}
                         >
-                          <span>✨</span>
+                          <span>âœ¨</span>
                           <span>Custom</span>
                         </button>
                         {Object.entries(modes).map(([key, {name, emoji, prompt}]) => (
@@ -1548,75 +1555,20 @@ export default function App() {
       )}
       {/* Results Page */}
       {currentPage === 'results' && currentPhotoId && (
-        <div className="resultsPage">
-          <div className="photoResult">
-            <div className="resultTabs" role="tablist" aria-label="Hasil foto dan GIF">
-              {RESULT_TAB_OPTIONS.map(({key, label, icon}) => {
-                const isActive = activeResultTab === key
-                const isAi = key === 'ai'
-                const isBusy = isAi ? currentPhoto?.isBusy : gifInProgress || !gifUrl
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    id={`result-tab-${key}`}
-                    className={c('resultTabButton', {active: isActive})}
-                    onClick={() => setActiveResultTab(key)}
-                    role="tab"
-                    aria-selected={isActive}
-                    aria-controls="result-panel"
-                    tabIndex={isActive ? 0 : -1}
-                  >
-                    <span className="icon">{icon}</span>
-                    <span className="resultTabLabel">{label}</span>
-                    {isBusy && <span className="resultTabStatus">Loading</span>}
-                  </button>
-                )
-              })}
-            </div>
-            <div
-              className="resultPanel"
-              role="tabpanel"
-              id="result-panel"
-              aria-labelledby={`result-tab-${activeResultTab}`}
-            >
-              {renderResultSection(activeResultTab)}
-            </div>
-            {/* 3 Tombol Utama: Download GIF | Download Foto | Selesai */}
-            <div className="resultsActions">
-              <button 
-                className="btn btnPrimary"
-                onClick={handleDownloadClick}
-                disabled={isUploading || photos.find(p => p.id === currentPhotoId)?.isBusy || gifInProgress}
-                style={{
-                  fontSize: '16px',
-                  padding: '15px 25px',
-                  minWidth: '180px',
-                  background: 'linear-gradient(135deg, #f59e0b, #f97316)'
-                }}
-              >
-                <span className="icon">
-                  {isUploading ? 'hourglass_empty' : 'download'}
-                </span>
-                Download
-              </button>
-              
-              <button 
-                className="btn btnSecondary"
-                onClick={retakePhoto}
-                style={{
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  minWidth: '160px',
-                  fontSize: '16px',
-                  padding: '15px 25px'
-                }}
-              >
-                <span className="icon">check</span>
-                Selesai
-              </button>
-            </div>
-          </div>
-        </div>
+        <ResultScreen
+          activeResultTab={activeResultTab}
+          setActiveResultTab={setActiveResultTab}
+          RESULT_TAB_OPTIONS={RESULT_TAB_OPTIONS}
+          renderResultSection={renderResultSection}
+          currentPhoto={currentPhoto}
+          gifInProgress={gifInProgress}
+          gifUrl={gifUrl}
+          handleDownloadClick={handleDownloadClick}
+          retakePhoto={retakePhoto}
+          photos={photos}
+          currentPhotoId={currentPhotoId}
+          isUploading={isUploading}
+        />
       )}
       {showDownloadModal && (
         <div className="qrModal" onClick={(e) => {
@@ -1698,7 +1650,7 @@ export default function App() {
         }}>
           <div className="desktopModeContent">
             <div className="desktopModeHeader">
-              <h2 className="desktopModeTitle">🎨 Pilih Mode Foto</h2>
+              <h2 className="desktopModeTitle">ðŸŽ¨ Pilih Mode Foto</h2>
             </div>
             
             <div className="desktopModeGrid">
@@ -1715,7 +1667,7 @@ export default function App() {
                   setShowDesktopModeSelector(false)
                 }}
               >
-                <span>✨</span> 
+                <span>âœ¨</span> 
                 <p>Custom</p>
               </button>
               {Object.entries(modes).map(([key, {name, emoji, prompt}]) => (
@@ -1749,7 +1701,7 @@ export default function App() {
         >
           {hoveredMode.key === 'custom' && !hoveredMode.prompt.length ? (
             <div style={{textAlign: 'center'}}>
-              <p style={{marginBottom: '8px'}}>💡 Click to set a custom prompt</p>
+              <p style={{marginBottom: '8px'}}>ðŸ’¡ Click to set a custom prompt</p>
               <p style={{fontSize: '11px', opacity: 0.7}}>Create your own AI art style</p>
             </div>
           ) : (
@@ -1764,3 +1716,4 @@ export default function App() {
     </>
   )
 }
+
